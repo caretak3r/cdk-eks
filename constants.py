@@ -1,0 +1,8 @@
+HELM_CHARTS = []
+AWS_EKS_KUBERNETES_VERSION = "1.28"
+
+EXISTING_VPC = False
+VPC_ID = ""
+SUBNET_IDS = []
+
+AWS_REGION = "us-east-1"

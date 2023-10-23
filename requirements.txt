@@ -1,0 +1,12 @@
+aws-cdk.core==1.124.0
+aws-cdk.aws_iam==1.124.0
+aws-cdk.aws_s3==1.124.0
+aws-cdk.aws_ec2==1.124.0
+aws-cdk.aws_eks==1.124.0
+aws-cdk.aws_cognito==1.124.0
+aws-cdk.aws_apigateway==1.124.0
+aws-cdk.aws_ecr==1.124.0
+aws-cdk.aws_eks_fargate==1.124.0
+boto3==1.18.33
+pyyaml==5.4.1
+requests==2.26.0
