@@ -1,9 +1,13 @@
-from aws_cdk import core, aws_ec2 as ec2
+from constructs import Construct
+from aws_cdk import Stack
+from aws_cdk import aws_ec2 as ec2
 
 
-class VpcStack(core.Stack):
-    def __init__(self, scope: core.Construct, id: str, **kwargs) -> None:
+class VpcStack(Stack):
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
+
+        # TODO: allow a customer provided VPC to be used instead of creating one
 
         # Create a fully private VPC networking without internet gateways or NAT gateways
         self.vpc = ec2.Vpc(
@@ -17,7 +21,9 @@ class VpcStack(core.Stack):
             restrict_default_security_group=True,
             subnet_configuration=[
                 ec2.SubnetConfiguration(
-                    name="Isolated", subnet_type=ec2.SubnetType.PRIVATE_ISOLATED, cidr_mask=18 # 4 /18s in /16
+                    name="Isolated",
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
+                    cidr_mask=18,  # 4 /18s in /16
                 )
             ],
             enable_dns_support=True,
