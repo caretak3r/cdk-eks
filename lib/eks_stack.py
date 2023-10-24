@@ -1,73 +1,54 @@
-from aws_cdk import (
-    aws_eks as eks,
-    aws_ec2 as ec2,
-    aws_ecr as ecr,
-    aws_logs as logs,
-    core,
-)
-
-from aws_cdk.core import App, Construct, Stack
-from aws_cdk.aws_eks import Cluster, FargateProfile, KubernetesVersion, Nodegroup
-from aws_cdk.aws_lambda_layer_kubectl_v28 import KubectlLayer
+from constructs import Construct
+from aws_cdk import Stack, CfnOutput, RemovalPolicy
+from aws_cdk import aws_eks as eks, aws_ec2 as ec2, aws_ecr as ecr, aws_logs as logs
 
 
-class EksStack(core.Stack):
-    def __init__(self, scope: core.Construct, id: str, vpc: ec2.Vpc, **kwargs) -> None:
+class EksStack(Stack):
+    def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # Create an EKS cluster within the VPC
-        self.cluster = eks.Cluster(
+        # Create a Fargate EKS cluster in the VPC from the VPC Stack
+        cluster = eks.FargateCluster(
             self,
-            "EKSCluster",
+            "EKSFargateCluster",
+            alb_controller=eks.AlbControllerOptions(
+                version="v2.6.0"
+            ),  # Deploy the ALB controller to the cluster
+            cluster_name="EksCdkProjectCluster",
+            cluster_logging=eks.ClusterLogging(
+                enable_types=["audit", "api", "authenticator", "controllerManager"]
+            ),  # Enable logging for the cluster
+            core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS
+            endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable public and private access to the cluster endpoint
+            kubectl_layer=27,  # Use the kubectl layer created above
+            # masters_role=
+            output_config_command=True,  # Output the aws eks update-kubeconfig command
+            # role=cluster_admin_role,  # Use the cluster admin role created above (Automatically created for you)
+            # security_group=cluster_security_group,  # Use the cluster security group created above (Automatically created for you)
+            secrets_encryption_key=eks.SecretsEncryptionKey.KMS,  # Use KMS to encrypt Kubernetes secrets
+            version=eks.KubernetesVersion.V1_27,
             vpc=vpc,
-            version=eks.KubernetesVersion.V1_28,
-            default_capacity=0,  # we want to manage capacity ourselves
-        )
-
-        # Add Fargate profile to EKS cluster
-        fargate_profile = eks.FargateProfile(
-            self,
-            "FargateProfile",
-            cluster=self.cluster,  # the EKS cluster to add the profile to
-            fargate_profile_name="MyFargateProfile",  # the name of the profile in EKS
-            selectors=[
-                eks.Selector(namespace="default")
-            ],  # the selectors to match for pods to use Fargate
-        )
-
-        # Add managed node group to EKS cluster
-        self.nodegroup = self.cluster.add_nodegroup_capacity(
-            "NodeGroup",
-            instance_types=[ec2.InstanceType("t3.medium")],
-            desired_size=2,
-            max_size=5,
-            min_size=1,
+            vpc_subnets=[{subnet_type: ec2.SubnetType.PRIVATE_ISOLATED}],
         )
 
         # Export the cluster name and ARN as stack outputs
-        core.CfnOutput(self, "ClusterName", value=self.cluster.cluster_name)
-        core.CfnOutput(self, "ClusterArn", value=self.cluster.cluster_arn)
+        CfnOutput(self, "ClusterName", value=self.cluster.cluster_name)
+        CfnOutput(self, "ClusterArn", value=self.cluster.cluster_arn)
 
-        # Export the Fargate profile name and ARN as stack outputs
-        core.CfnOutput(
-            self, "FargateProfileName", value=fargate_profile.fargate_profile_name
-        )
-        core.CfnOutput(
-            self, "FargateProfileArn", value=fargate_profile.fargate_profile_arn
-        )
+        # # ECR object to apply to EKS cluster- we pull from ECR and apply "something"
+        # envoy = ecr.Repository.from_repository_name(
+        #     self,
+        #     "aws-envoy",
+        #     repository_arn=Stack.of(self).format_arn(
+        #         service="ecr",
+        #         resource="repository",
+        #         resource_name="aws-envoy",
+        #         account="",
+        #     ),
+        #     repository_name="aws-envoy",
+        # )
 
-        # ECR object to apply to EKS cluster- we pull from ECR and apply "something"
-        envoy = ecr.Repository.from_repository_name(
-            self,
-            "aws-envoy",
-            repository_arn=core.Stack.of(self).format_arn(
-                service="ecr",
-                resource="repository",
-                resource_name="aws-envoy",
-                account="",
-            ),
-            repository_name="aws-envoy",
-        )
+        # pull helm charts from ECR and add_helm_chart() to cluster
 
         # Logging setup
         log_group = logs.LogGroup(
@@ -75,5 +56,5 @@ class EksStack(core.Stack):
             "/eks/logs",
             retention=logs.RetentionDays.ONE_WEEK,
             log_group_name="-eks-log-group",
-            removal_policy=core.RemovalPolicy.DESTROY,
+            removal_policy=RemovalPolicy.DESTROY,
         )
