@@ -38,4 +38,13 @@ Use bootstrap to provision a new ECR plus configurations.
 
 2. In CDK v2 you'll need to update any v1 core.* modules to instead be imported as a top level module from aws_cdk. You'll also import the constructs module from the Construct package. 
 
+3. AWS CDK v2 consolidates the stable parts of the AWS Construct Library, including the core library, into a single package, aws-cdk-lib. Developers no longer need to install additional packages for the individual AWS services they use. This single-package approach also means that you don't have to synchronize the versions of the various CDK library packages.
+
+4. Not sure if absolutely needed, but CDK by default uses 1.24 of the kubectl lambda layer, which is used on stack updates. Solve this by `pip install aws-cdk.lambda-layer-kubectl-v27`
+
 ---
+
+## Issues / Todos
+
+- [ ] There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.
+- [ ] 
