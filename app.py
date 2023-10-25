@@ -1,5 +1,5 @@
 from constructs import Construct
-from aws_cdk import App, Stack
+from aws_cdk import App, Stack, Tags
 from aws_cdk import Environment
 from lib.eks_stack import EksStack
 from lib.vpc_stack import VpcStack
@@ -15,7 +15,9 @@ stack = Stack(app, "EksCdkProjectStack", env=Environment(region=constants.AWS_RE
 vpc_stack = VpcStack(app, "VPCStack")
 
 # Create an EKS Stack
-eks_stack = EksStack(app, "EKSStack", vpc=vpc_stack.vpc)
+eks_stack = EksStack(app, "EKSStack", vpc=vpc_stack.get_vpc)
+# add tags to the entire stack
+# eks_stack.Tags.of(eks_stack).add("EKS_STAGE", constants.EKS_STAGE)
 
 # Create a Cognito Stack
 # cognito_stack = CognitoStack(app, "CognitoStack")
