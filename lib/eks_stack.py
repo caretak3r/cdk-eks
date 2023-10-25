@@ -1,5 +1,5 @@
 from constructs import Construct
-from aws_cdk import Stack, CfnOutput, RemovalPolicy
+from aws_cdk import Stack, CfnOutput, RemovalPolicy, Tags
 from aws_cdk import aws_eks as eks, aws_ec2 as ec2, aws_ecr as ecr, aws_logs as logs
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 
@@ -11,7 +11,7 @@ class EksStack(Stack):
         kubectl_layer = KubectlV27Layer(self, "KubectlV27Layer")
 
         # Create a Fargate EKS cluster in the VPC from the VPC Stack
-        cluster = eks.FargateCluster(
+        self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
             alb_controller=eks.AlbControllerOptions(
@@ -32,13 +32,14 @@ class EksStack(Stack):
             output_config_command=True,  # Output the aws eks update-kubeconfig command
             # role=cluster_admin_role,  # Use the cluster admin role created above (Automatically created for you)
             # security_group=cluster_security_group,  # Use the cluster security group created above (Automatically created for you)
-            secrets_encryption_key=eks.SecretsEncryptionKey.KMS,  # Use KMS to encrypt Kubernetes secrets
             version=eks.KubernetesVersion.V1_27,
             vpc=vpc,
-            vpc_subnets=ec2.SubnetSelection(
-                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-            ),
+            vpc_subnets=[
+                ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+                {"name": "Isolated"},
+            ],
         )
+        Tags.of(self.cluster).add("Name", "EksCdkProjectCluster")
 
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "ClusterName", value=self.cluster.cluster_name)
