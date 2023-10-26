@@ -1,31 +1,52 @@
-from constructs import Construct
-from aws_cdk import App, Stack, Tags
-from aws_cdk import Environment
-from lib.eks_stack import EksStack
-from lib.vpc_stack import VpcStack
+from aws_cdk import App, Environment
+from stacks.eks_stack import EksStack
 import constants
+import os
+from dotenv import load_dotenv
 
-# from lib.cognito_stack import CognitoStack
-# from lib.helm_stack import HelmStack
+# loads environment variables from .env file
+load_dotenv()
 
+# initialize app
 app = App()
-stack = Stack(app, "EksCdkProjectStack", env=Environment(region=constants.AWS_REGION))
 
-# Create a VPC Stack or detect an existing VPC provided by the customer
-vpc_stack = VpcStack(app, "VPCStack")
+# TODO: these should match what is in the .env file
+env = {
+    "env": Environment(
+        # profile=os.getenv("AWS_PROFILE", "default"),
+        account=os.getenv("AWS_ACCOUNT_ID", ""),
+        region=os.getenv("AWS_REGION"),
+    )
+}
 
-# Create an EKS Stack
-eks_stack = EksStack(app, "EKSStack", vpc=vpc_stack.get_vpc)
-# add tags to the entire stack
-# eks_stack.Tags.of(eks_stack).add("EKS_STAGE", constants.EKS_STAGE)
+env_vars = [
+    "AWS_VPC_ID",
+    "AWS_PRIVATE_SUBNET_IDS",
+    "AWS_ECR_REPO_URL",
+    "AWS_CERTIFICATE_ARN",
+]
 
-# Create a Cognito Stack
-# cognito_stack = CognitoStack(app, "CognitoStack")
+for var in env_vars:
+    if not os.getenv(var):
+        print(f"{var} is not set.")
+        user_input = input(f"Please enter a value for {var}: ")
+        if user_input:
+            os.environ[var] = user_input
+        else:
+            print(f"{var} is required. Exiting script.")
+            exit(1)
 
-# Create an S3 Stack
-# s3_stack = S3Stack(app, "S3Stack")
+# Create an EKS Stack with Fargate workers
+eks_stack = EksStack(
+    app,
+    "EksStack",
+    stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
+    vpc_id=os.getenv("AWS_VPC_ID"),
+    private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
+    certificate_arn=os.getenv("AWS_CERTIFICATE_ARN"),
+    ecr_repo_url=os.getenv("AWS_ECR_REPO_URL"),
+    **env,
+)
 
-# Create a Helm Stack
-# helm_stack = HelmStack(app, "HelmStack", eks_cluster=eks_stack.eks_cluster)
-
-app.synth()
+# app.synth()
+app.synth(validate_on_synthesis=True, force=True)
