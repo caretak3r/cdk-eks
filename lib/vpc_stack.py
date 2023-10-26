@@ -20,7 +20,7 @@ class VpcStack(Stack):
                 self,
                 "VPC",
                 vpc_name=f"{constants.STACK_PREFIX}Vpc",
-                cidr=ec2.IpAddresses.cidr("10.0.0.0/16"),
+                ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16"),
                 max_azs=3,  # Default is all AZs in the region
                 nat_gateways=0,
                 create_internet_gateway=False,
