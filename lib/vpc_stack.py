@@ -19,9 +19,9 @@ class VpcStack(Stack):
             self.vpc = ec2.Vpc(
                 self,
                 "VPC",
-                vpc_name=f"{constants.STACK_PREFIX}VPC",
-                cidr="10.0.0.0/16",
-                max_azs=2,  # Default is all AZs in the region
+                vpc_name=f"{constants.STACK_PREFIX}Vpc",
+                cidr=ec2.IpAddresses.cidr("10.0.0.0/16"),
+                max_azs=3,  # Default is all AZs in the region
                 nat_gateways=0,
                 create_internet_gateway=False,
                 restrict_default_security_group=True,
@@ -40,7 +40,21 @@ class VpcStack(Stack):
                     )
                 },
             )
-            Tags.of(self.vpc).add("Name", f"{constants.STACK_PREFIX}VPC")
+            Tags.of(self.vpc).add("Name", f"{constants.STACK_PREFIX}Vpc")
+
+            # tag all subnets
+            selection = self.vpc.select_subnets(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            )
+
+            for index, subnet in enumerate(selection.subnets, start=1):
+                Tags.of(subnet).add(
+                    "Name", f"{constants.STACK_PREFIX}IsolatedSubnet{index}"
+                )
+                Tags.of(subnet).add("kubernetes.io/role/internal-elb", "true")
+                Tags.of(subnet).add(
+                    f"kubernetes.io/cluster/{constants.STACK_PREFIX}EKSCluster", "owned"
+                )
 
             # Add required VPC endpoints
             # TODO: add endpoint policies
@@ -54,10 +68,16 @@ class VpcStack(Stack):
                 "STSInterfaceEndpoint", service=ec2.InterfaceVpcEndpointAwsService.STS
             )
 
-            # ECR Interface Endpoint
+            # ECR Docker Interface Endpoint
             self.vpc.add_interface_endpoint(
                 "EcrDockerEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
+            )
+
+            # ECR API Interface Endpoint
+            self.vpc.add_interface_endpoint(
+                "EcrApiEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.ECR,
             )
 
             # EKS Interface Endpoints
@@ -65,15 +85,15 @@ class VpcStack(Stack):
                 "EKSInterfaceEndpoint", service=ec2.InterfaceVpcEndpointAwsService.EKS
             )
 
-            # # CloudWatch Interface Endpoints
-            # self.vpc.add_interface_endpoint(
-            #     "CloudWatchLogsEndpoint",
-            #     service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-            # )
-            # self.vpc.add_interface_endpoint(
-            #     "CloudWatchEventsEndpoint",
-            #     service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
-            # )
+            # CloudWatch Interface Endpoints
+            self.vpc.add_interface_endpoint(
+                "CloudWatchLogsEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+            )
+            self.vpc.add_interface_endpoint(
+                "CloudWatchEventsEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
+            )
 
     @property
     def get_vpc(self) -> ec2.Vpc:
