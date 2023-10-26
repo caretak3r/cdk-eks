@@ -1,5 +1,5 @@
 from constructs import Construct
-from aws_cdk import Stack
+from aws_cdk import Stack, Tags
 from aws_cdk import aws_ec2 as ec2
 import constants
 
@@ -9,9 +9,9 @@ class VpcStack(Stack):
         super().__init__(scope, id, **kwargs)
 
         # TODO: allow a customer provided VPC to be used instead of creating one
-        if constants.EXISTING_VPC:
+        if constants.AWS_EXISTING_VPC:
             self.vpc = ec2.Vpc.from_lookup(
-                self, "VPC", vpc_id=constants.VPC_ID, is_default=False
+                self, "VPC", vpc_id=constants.AWS_VPC_ID, is_default=False
             )
             return
         else:
@@ -19,7 +19,7 @@ class VpcStack(Stack):
             self.vpc = ec2.Vpc(
                 self,
                 "VPC",
-                vpc_name="EksCdkProjectVPC",
+                vpc_name=f"{constants.STACK_PREFIX}VPC",
                 cidr="10.0.0.0/16",
                 max_azs=3,  # Default is all AZs in the region
                 nat_gateways=0,
@@ -27,7 +27,7 @@ class VpcStack(Stack):
                 restrict_default_security_group=True,
                 subnet_configuration=[
                     ec2.SubnetConfiguration(
-                        name="Isolated",
+                        name=f"{constants.STACK_PREFIX}IsolatedSubnet",
                         subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
                         cidr_mask=18,  # 4 /18s in /16
                     )
@@ -40,9 +40,10 @@ class VpcStack(Stack):
                     )
                 },
             )
+            Tags.of(self.vpc).add("Name", f"{constants.STACK_PREFIX}VPC")
 
             # Add required VPC endpoints
-
+            # TODO: add endpoint policies
             # SSM Interface Endpoint
             self.vpc.add_interface_endpoint(
                 "SSMInterfaceEndpoint", service=ec2.InterfaceVpcEndpointAwsService.SSM
@@ -75,5 +76,5 @@ class VpcStack(Stack):
             # )
 
     @property
-    def get_vpc(self):
+    def get_vpc(self) -> ec2.Vpc:
         return self.vpc
