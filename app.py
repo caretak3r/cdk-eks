@@ -7,18 +7,18 @@ import constants
 
 app = App()
 
-env = {
-    "env": Environment(
-        account=constants.AWS_ACCOUNT_ID,
-        region=constants.AWS_REGION,
-    )
-}
+# env = {
+#     "env": Environment(
+#         account=constants.AWS_ACCOUNT_ID,
+#         region=constants.AWS_REGION,
+#     )
+# }
 
-base_stack = BaseStack(
-    app,
-    f"{constants.STACK_PREFIX}BaseStack",
-    **env,
-)
+# base_stack = BaseStack(
+#     app,
+#     f"{constants.STACK_PREFIX}BaseStack",
+#     **env,
+# )
 
 # Create a VPC Stack or detect an existing VPC provided by the customer
 vpc_stack = VpcStack(app, "VpcStack")
