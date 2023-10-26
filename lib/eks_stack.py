@@ -25,7 +25,7 @@ class EksStack(Stack):
                 eks.ClusterLoggingTypes.CONTROLLER_MANAGER,
                 eks.ClusterLoggingTypes.SCHEDULER,
             ],
-            core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS
+            # core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS
             endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable public and private access to the cluster endpoint
             kubectl_layer=kubectl_layer,  # Use the kubectl layer created above
             # masters_role=

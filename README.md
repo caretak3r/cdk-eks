@@ -47,4 +47,5 @@ Use bootstrap to provision a new ECR plus configurations.
 ## Issues / Todos
 
 - [ ] There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.
-- [ ] 
+
+---

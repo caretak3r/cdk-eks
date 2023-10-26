@@ -9,7 +9,12 @@ import constants
 # from lib.helm_stack import HelmStack
 
 app = App()
-stack = Stack(app, "EksCdkProjectStack", env=Environment(region=constants.AWS_REGION))
+stack = Stack(
+    app,
+    "EksCdkStack",
+    env=Environment(region=constants.AWS_REGION),
+    stack_name=f"{constants.STACK_PREFIX}Stack",
+)
 
 # Create a VPC Stack or detect an existing VPC provided by the customer
 vpc_stack = VpcStack(app, "VPCStack")
