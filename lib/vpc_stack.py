@@ -21,7 +21,7 @@ class VpcStack(Stack):
                 "VPC",
                 vpc_name=f"{constants.STACK_PREFIX}VPC",
                 cidr="10.0.0.0/16",
-                max_azs=3,  # Default is all AZs in the region
+                max_azs=2,  # Default is all AZs in the region
                 nat_gateways=0,
                 create_internet_gateway=False,
                 restrict_default_security_group=True,
