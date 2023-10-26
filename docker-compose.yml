@@ -1,0 +1,15 @@
+version: '3.6'
+services:
+  cdk:
+    image: tkp-cdk
+    build:
+      context: .
+      dockerfile: Dockerfile
+      # args:
+      #   USER_ID: ${USER_ID:-0}
+      #   GROUP_ID: ${GROUP_ID:-0}
+    stdin_open: true # docker run -i
+    tty: true # docker run -t
+    volumes:
+      - ${HOME}/.aws:/home/cdk/.aws
+      - ${PWD}:/app

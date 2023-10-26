@@ -1,0 +1,16 @@
+#!make
+ifneq (,$(wildcard ./.env))
+    include .env
+    export
+endif
+
+bootstrap:
+	cdk bootstrap --toolkit-stack-name tkp-cdk-toolkit
+
+synth:
+	cdk synth
+
+deploy:
+	cdk deploy --require-approval=never --no-previous-parameters
+
+.PHONY: bootstrap synth deploy
