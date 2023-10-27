@@ -1,5 +1,5 @@
 from constructs import Construct
-from aws_cdk import Stack, Tags
+from aws_cdk import Stack, Tags, CfnOutput
 from aws_cdk import aws_ec2 as ec2
 import constants
 
@@ -58,41 +58,70 @@ class VpcStack(Stack):
 
             # Add required VPC endpoints
             # TODO: add endpoint policies
+
+            # ALB Interface Endpoint
+            self.vpc.add_interface_endpoint(
+                "ALBInterfaceEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.ELASTIC_LOAD_BALANCING,
+                private_dns_enabled=True,
+            )
+
             # SSM Interface Endpoint
             self.vpc.add_interface_endpoint(
-                "SSMInterfaceEndpoint", service=ec2.InterfaceVpcEndpointAwsService.SSM
+                "SSMInterfaceEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.SSM,
+                private_dns_enabled=True,
             )
 
             # STS Interface Endpoint
             self.vpc.add_interface_endpoint(
-                "STSInterfaceEndpoint", service=ec2.InterfaceVpcEndpointAwsService.STS
+                "STSInterfaceEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.STS,
+                private_dns_enabled=True,
             )
 
             # ECR Docker Interface Endpoint
             self.vpc.add_interface_endpoint(
                 "EcrDockerEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
+                private_dns_enabled=True,
             )
 
             # ECR API Interface Endpoint
             self.vpc.add_interface_endpoint(
                 "EcrApiEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.ECR,
+                private_dns_enabled=True,
             )
 
             # EKS Interface Endpoints
             self.vpc.add_interface_endpoint(
-                "EKSInterfaceEndpoint", service=ec2.InterfaceVpcEndpointAwsService.EKS
+                "EKSInterfaceEndpoint",
+                service=ec2.InterfaceVpcEndpointAwsService.EKS,
+                private_dns_enabled=True,
             )
 
             # CloudWatch Interface Endpoints
             self.vpc.add_interface_endpoint(
                 "CloudWatchLogsEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
+                private_dns_enabled=True,
             )
             self.vpc.add_interface_endpoint(
                 "CloudWatchEventsEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
+                private_dns_enabled=True,
+            )
+
+            # CfnOutput for VPC ID
+            CfnOutput(self, "VpcId", value=self.vpc.vpc_id)
+            # CfnOutput for VPC CIDR
+            CfnOutput(self, "VpcCidr", value=self.vpc.vpc_cidr_block)
+            # CfnOutput for VPC Isolated Subnet IDs
+            CfnOutput(
+                self,
+                "VpcIsolatedSubnetIds",
+                value=", ".join([subnet.subnet_id for subnet in selection.subnets]),
             )
 
     @property

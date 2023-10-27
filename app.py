@@ -21,9 +21,16 @@ app = App()
 # )
 
 # Create a VPC Stack or detect an existing VPC provided by the customer
-vpc_stack = VpcStack(app, "VpcStack")
+vpc_stack = VpcStack(
+    app, "VpcStack", stack_name=f"{constants.STACK_PREFIX}-Private-VpcStack"
+)
 
 # Create an EKS Stack
-eks_stack = EksStack(app, "EksStack", vpc=vpc_stack.get_vpc)
+eks_stack = EksStack(
+    app,
+    "EksStack",
+    stack_name=f"{constants.STACK_PREFIX}-EksStack",
+    vpc=vpc_stack.get_vpc,
+)
 
 app.synth()
