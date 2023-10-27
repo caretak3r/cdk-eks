@@ -27,7 +27,7 @@ class VpcStack(Stack):
                 restrict_default_security_group=True,
                 subnet_configuration=[
                     ec2.SubnetConfiguration(
-                        name=f"{constants.STACK_PREFIX}IsolatedSubnet",
+                        name=f"{constants.STACK_PREFIX}Isolated",
                         subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
                         cidr_mask=18,  # 4 /18s in /16
                     )
@@ -48,9 +48,7 @@ class VpcStack(Stack):
             )
 
             for index, subnet in enumerate(selection.subnets, start=1):
-                Tags.of(subnet).add(
-                    "Name", f"{constants.STACK_PREFIX}IsolatedSubnet{index}"
-                )
+                Tags.of(subnet).add("Name", f"{constants.STACK_PREFIX}Isolated{index}")
                 Tags.of(subnet).add("kubernetes.io/role/internal-elb", "true")
                 Tags.of(subnet).add(
                     f"kubernetes.io/cluster/{constants.STACK_PREFIX}EKSCluster", "owned"
@@ -127,3 +125,7 @@ class VpcStack(Stack):
     @property
     def get_vpc(self) -> ec2.Vpc:
         return self.vpc
+
+    @property
+    def get_subnets(self) -> ec2.Subnet:
+        return self.SubnetSelection
