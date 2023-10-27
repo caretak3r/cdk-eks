@@ -24,7 +24,4 @@ class HelmStack(Stack):
             values={"key": "value"},  # values to pass to the Helm chart
         )
 
-
-app = core.App()
-HelmStack(app, "HelmStack")
-app.synth()
+        eks.Helm

@@ -46,6 +46,7 @@ class EksStack(Stack):
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "ClusterName", value=self.cluster.cluster_name)
         CfnOutput(self, "ClusterArn", value=self.cluster.cluster_arn)
+        CfnOutput(self, "ClusterEndpoint", value=self.cluster.cluster_endpoint)
 
         # Logging setup
         log_group = logs.LogGroup(
