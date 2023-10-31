@@ -21,7 +21,7 @@ class VpcStack(Stack):
                 "VPC",
                 vpc_name=f"{constants.STACK_PREFIX}Vpc",
                 ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16"),
-                max_azs=3,  # Default is all AZs in the region
+                max_azs=4,  # Default is all AZs in the region
                 nat_gateways=0,
                 create_internet_gateway=False,
                 restrict_default_security_group=True,
@@ -62,6 +62,9 @@ class VpcStack(Stack):
                 "ALBInterfaceEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.ELASTIC_LOAD_BALANCING,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # SSM Interface Endpoint
@@ -69,6 +72,9 @@ class VpcStack(Stack):
                 "SSMInterfaceEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.SSM,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # STS Interface Endpoint
@@ -76,6 +82,9 @@ class VpcStack(Stack):
                 "STSInterfaceEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.STS,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # ECR Docker Interface Endpoint
@@ -83,6 +92,9 @@ class VpcStack(Stack):
                 "EcrDockerEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # ECR API Interface Endpoint
@@ -90,6 +102,9 @@ class VpcStack(Stack):
                 "EcrApiEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.ECR,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # EKS Interface Endpoints
@@ -97,6 +112,9 @@ class VpcStack(Stack):
                 "EKSInterfaceEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.EKS,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # CloudWatch Interface Endpoints
@@ -104,11 +122,17 @@ class VpcStack(Stack):
                 "CloudWatchLogsEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
             self.vpc.add_interface_endpoint(
                 "CloudWatchEventsEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
                 private_dns_enabled=True,
+                subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
             )
 
             # CfnOutput for VPC ID
