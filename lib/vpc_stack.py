@@ -35,8 +35,10 @@ class VpcStack(Stack):
                 enable_dns_support=True,
                 enable_dns_hostnames=True,
                 gateway_endpoints={
-                    "S3": ec2.GatewayVpcEndpointOptions(
+                    "S3Endpoint": ec2.GatewayVpcEndpointOptions(
                         service=ec2.GatewayVpcEndpointAwsService.S3
+                        # Add only to ISOLATED subnets - not needed since we only have private subnets
+                        # subnets=[aws_ec2.SubnetSelection(subnet_type=aws_ec2.SubnetType.PRIVATE_ISOLATED)
                     )
                 },
             )
@@ -55,8 +57,6 @@ class VpcStack(Stack):
                 )
 
             # Add required VPC endpoints
-            # TODO: add endpoint policies
-
             # ALB Interface Endpoint
             self.vpc.add_interface_endpoint(
                 "ALBInterfaceEndpoint",
