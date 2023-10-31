@@ -9,6 +9,9 @@ class EksStack(Stack):
     def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # import existing VPC
+        # vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=vpc_id) # get this from constants
+
         # Create a Fargate EKS cluster in the VPC from the VPC Stack
         self.cluster = eks.FargateCluster(
             self,
@@ -16,7 +19,7 @@ class EksStack(Stack):
             alb_controller=eks.AlbControllerOptions(
                 version=eks.AlbControllerVersion.V2_5_1
             ),  # Deploy the ALB controller to the cluster
-            cluster_name="EksCdkProjectCluster",
+            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
                 eks.ClusterLoggingTypes.AUDIT,
