@@ -1,4 +1,3 @@
-import os
 from aws_cdk import App, Environment
 from stacks.base_stack import BaseStack
 from stacks.eks_stack import EksStack
