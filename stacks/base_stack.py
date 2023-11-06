@@ -1,22 +1,10 @@
 from constructs import Construct
-from aws_cdk import CfnOutput, Duration, Stack, Tags, RemovalPolicy
-from aws_cdk import aws_ec2 as ec2
-from aws_cdk import aws_ecr as ecr
-from aws_cdk import aws_logs as logs
-from aws_cdk import aws_kms as kms
-from aws_cdk import aws_s3 as s3
-from aws_cdk import aws_ssm as ssm
-from aws_cdk import aws_iam as iam
+from aws_cdk import CfnOutput, Duration, Stack, RemovalPolicy
+from aws_cdk import aws_ecr as ecr, aws_s3 as s3, aws_iam as iam
 import constants
-from typing import Any, Dict, List, Mapping, Optional, Sequence, Union
+from typing import Union
 
 
-# This stack will deploy a VPC with private subnets
-# and no internet gateways or NAT gateways,
-# a KMS key with an alias to encrypt EKS,
-# and an S3 bucket that is completely private,
-# and Cloudwatch log groups, and any IAM roles.
-# Every resource will have an output with CfnOutput.
 class BaseStack(Stack):
     def __init__(
         self, scope: Construct, id: str, ecr_repo: Union[str, ecr.Repository], **kwargs
@@ -42,3 +30,33 @@ class BaseStack(Stack):
             value=self.repo.repository_name,
             description="The name of the ECR repository",
         )
+
+        # Create an S3 bucket with encryption and a lifecycle policy, a strict bucket policy only allowing access to objects from an IAM role that EKS will use. Bucket must be fully private
+        # separate bucket into its own stack since it depends on the EKS role created #TODO
+        # otherwise create a specific IAM role for the master role, which is deterministic and keep the s3 bucket in this stack
+        self.bucket = s3.Bucket(
+            self,
+            "bucket",
+            bucket_name=f"{constants.STACK_PREFIX}-bucket",
+            encryption=s3.BucketEncryption.KMS_MANAGED,
+            block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
+            lifecycle_rules=[
+                s3.LifecycleRule(
+                    enabled=True,
+                    abort_incomplete_multipart_upload_after=Duration.days(7),
+                    expiration=Duration.days(30),
+                )
+            ],
+            removal_policy=RemovalPolicy.DESTROY,
+        )
+
+        self.bucket_policy = iam.PolicyStatement(
+            actions=["s3:GetObject", "s3:PutObject"],
+            resources=[self.bucket.arn_for_objects("*")],
+            principals=[
+                iam.Role.from_role_arn(
+                    self, "Role", "arn:aws:iam::123456789012:role/eks"
+                )
+            ],
+        )
+        self.bucket.add_to_resource_policy(self.bucket_policy)

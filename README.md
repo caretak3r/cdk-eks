@@ -4,15 +4,6 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 ---
 
-## Bootstrap
-
-Use bootstrap to provision a new ECR plus configurations.
-
-
-## Deploy
-
----
-
 ## Todo
 
 1. https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/configure-mutual-tls-authentication-for-applications-running-on-amazon-eks.html
@@ -29,7 +20,6 @@ Use bootstrap to provision a new ECR plus configurations.
 
 2. Support envelope encryption for EKS via KMS.
 
-3. 
 ---
 
 ## Considerations 
@@ -44,12 +34,13 @@ Use bootstrap to provision a new ECR plus configurations.
 
 5. We’ll use boto3 (this is one of the things that I don’t really like about AWS CDK – that a lot of things have to be done not with the methods/constructs of the CDK itself, but with “crutches” in the form of boto3 or other modules/libraries).
 
+6. The CDK produces a `kubectl` lambda layer to perform `helm` and `kubectl` commands on the cluster, instead of an operator. Read more [here](docs/kubectl-lambda-layer.md)
+
+7. A limitation of the current implementation is that eksctl initially creates the cluster with both public and private endpoint access enabled, **and disables public endpoint access after all operations have completed.** This is required because eksctl needs access to the Kubernetes API server to allow self-managed nodes to join the cluster and to support GitOps and Fargate. After these operations have completed, eksctl switches the cluster endpoint access to private-only. This additional update does mean that creation of a fully-private cluster will take longer than for a standard cluster. In the future, eksctl may switch to a VPC-enabled Lambda function to perform these API operations.
 ---
 
 ## Issues / Todos
 
-- [ ] There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.
-
-
+- [X] ~~There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.~~ (v27 exists but you need to download it from git)
 
 ---
