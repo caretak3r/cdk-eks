@@ -17,6 +17,7 @@ class RdsStack(Stack):
         # import existing VPC and find the subnets to use to deploy RDS and subnet_groups
         vpc_subnets = vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED)
         subnet_ids = [subnet.subnet_id for subnet in vpc_subnets.subnets]
+        private_vpc_subnets = ec2.SubnetSelection(subnet_ids=subnet_ids)
 
         # Create a KMS key specifcally for RDS
         # TODO: reeval the retention of the key in use
@@ -77,14 +78,14 @@ class RdsStack(Stack):
             removal_policy=RemovalPolicy.SNAPSHOT,  # takes a snapshot before removal
             copy_tags_to_snapshot=True,
             vpc=vpc,
-            vpc_subnets=subnet_ids,
+            vpc_subnets=private_vpc_subnets,
             security_groups=[db_security_group],
             subnet_group=rds.SubnetGroup(
                 self,
                 id=f"{constants.STACK_PREFIX}-AuroraSubnetGroup",
                 vpc=vpc,
                 description=id + " Subnet group for RDS",
-                vpc_subnets=subnet_ids,
+                vpc_subnets=private_vpc_subnets,
                 subnet_group_name=id + "-SubnetGroup",
             ),
             storage_encrypted=True,
