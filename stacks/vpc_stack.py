@@ -156,7 +156,7 @@ class VpcStack(Stack):
         return self.vpc
 
     @property
-    def get_subnets(self) -> List[ec2.ISubnet]:
+    def get_subnets(self):
         if constants.AWS_PRIVATE_SUBNET_IDS:
             return constants.AWS_PRIVATE_SUBNET_IDS
         else:
