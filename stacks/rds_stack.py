@@ -17,7 +17,7 @@ class RdsStack(Stack):
         # import existing VPC and find the subnets to use to deploy RDS and subnet_groups
         vpc_subnets = vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED)
         subnet_ids = [subnet.subnet_id for subnet in vpc_subnets.subnets]
-        private_vpc_subnets = ec2.SubnetSelection(subnet_ids=subnet_ids)
+        private_vpc_subnets = ec2.SubnetSelection(subnets=subnet_ids)
 
         # Create a KMS key specifcally for RDS
         # TODO: reeval the retention of the key in use
