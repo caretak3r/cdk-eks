@@ -97,7 +97,14 @@ class RdsStack(Stack):
                     ec2.InstanceClass.M5, ec2.InstanceSize.XLARGE
                 ),
             ),
-            readers=[rds.ClusterInstance.provisioned("reader")],
+            readers=[
+                rds.ClusterInstance.provisioned(
+                    "reader",
+                    instance_type=ec2.InstanceType.of(
+                        ec2.InstanceClass.M5, ec2.InstanceSize.XLARGE
+                    ),
+                )
+            ],
             storage_type=rds.DBClusterStorageType.AURORA_IOPT1,
         )
 
