@@ -41,7 +41,6 @@ rds_stack = RdsStack(
     "RdsStack",
     stack_name=f"{constants.STACK_PREFIX}-rds-stack",
     vpc=vpc_stack.get_vpc,
-    subnets=vpc_stack.get_subnets,
 )
 
 app.synth(
