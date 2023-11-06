@@ -78,14 +78,18 @@ class RdsStack(Stack):
             removal_policy=RemovalPolicy.SNAPSHOT,  # takes a snapshot before removal
             copy_tags_to_snapshot=True,
             vpc=vpc,
-            vpc_subnets=private_vpc_subnets,
+            vpc_subnets=ec2.SubnetSelection(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ),
             security_groups=[db_security_group],
             subnet_group=rds.SubnetGroup(
                 self,
                 id=f"{constants.STACK_PREFIX}-AuroraSubnetGroup",
                 vpc=vpc,
                 description=id + " Subnet group for RDS",
-                vpc_subnets=private_vpc_subnets,
+                vpc_subnets=ec2.SubnetSelection(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                ),
                 subnet_group_name=id + "-SubnetGroup",
             ),
             storage_encrypted=True,
