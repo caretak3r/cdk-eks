@@ -12,7 +12,7 @@ import constants
 
 class RdsStack(Stack):
     def __init__(
-        self, scope: Construct, id: str, vpc: ec2.Vpc, subnets: ec2.ISubnet, **kwargs
+        self, scope: Construct, id: str, vpc: ec2.Vpc, subnets: list, **kwargs
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
@@ -94,7 +94,7 @@ class RdsStack(Stack):
                 "writer",
                 publicly_accessible=False,
                 instance_type=ec2.InstanceType.of(
-                    ec2.InstanceClass.R6G, ec2.InstanceSize.XLARGE4
+                    ec2.InstanceClass.M5, ec2.InstanceSize.XLARGE
                 ),
             ),
             readers=[rds.ClusterInstance.provisioned("reader")],
