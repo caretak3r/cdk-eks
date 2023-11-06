@@ -2,6 +2,7 @@ from aws_cdk import App, Environment
 from stacks.base_stack import BaseStack
 from stacks.eks_stack import EksStack
 from stacks.vpc_stack import VpcStack
+from stacks.rds_stack import RdsStack
 import constants
 
 app = App()
@@ -33,6 +34,14 @@ eks_stack = EksStack(
     "EksStack",
     stack_name=f"{constants.STACK_PREFIX}-eks-stack",
     vpc=vpc_stack.get_vpc,
+)
+
+rds_stack = RdsStack(
+    app,
+    "RdsStack",
+    stack_name=f"{constants.STACK_PREFIX}-rds-stack",
+    vpc=vpc_stack.get_vpc,
+    subnets=vpc_stack.get_subnets,
 )
 
 app.synth()

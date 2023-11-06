@@ -2,24 +2,26 @@ from constructs import Construct
 from aws_cdk import Stack, Tags, CfnOutput
 from aws_cdk import aws_ec2 as ec2
 import constants
+from typing import List
 
 
 class VpcStack(Stack):
     def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # TODO: allow a customer provided VPC to be used instead of creating one
+        # TODO: allow a customer provided VPC ID to be used instead of creating one
         if constants.AWS_EXISTING_VPC:
             self.vpc = ec2.Vpc.from_lookup(
                 self, "VPC", vpc_id=constants.AWS_VPC_ID, is_default=False
             )
+            self.subnets = constants.AWS_PRIVATE_SUBNET_IDS
             return
         else:
             # Create a fully private VPC networking without internet gateways or NAT gateways
             self.vpc = ec2.Vpc(
                 self,
                 "VPC",
-                vpc_name=f"{constants.STACK_PREFIX}Vpc",
+                vpc_name=f"{constants.STACK_PREFIX}-private-vpc",
                 ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16"),
                 max_azs=4,  # Default is all AZs in the region
                 nat_gateways=0,
@@ -27,9 +29,9 @@ class VpcStack(Stack):
                 restrict_default_security_group=True,
                 subnet_configuration=[
                     ec2.SubnetConfiguration(
-                        name=f"{constants.STACK_PREFIX}Isolated",
+                        name=f"{constants.STACK_PREFIX}-Isolated",
                         subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
-                        cidr_mask=18,  # 4 /18s in /16
+                        cidr_mask=19,  # 4 /18s in /16
                     )
                 ],
                 enable_dns_support=True,
@@ -42,7 +44,7 @@ class VpcStack(Stack):
                     )
                 },
             )
-            Tags.of(self.vpc).add("Name", f"{constants.STACK_PREFIX}Vpc")
+            Tags.of(self.vpc).add("Name", f"{constants.STACK_PREFIX}-private-vpc")
 
             # tag all subnets
             selection = self.vpc.select_subnets(
@@ -50,10 +52,11 @@ class VpcStack(Stack):
             )
 
             for index, subnet in enumerate(selection.subnets, start=1):
-                Tags.of(subnet).add("Name", f"{constants.STACK_PREFIX}Isolated{index}")
+                Tags.of(subnet).add("Name", f"{constants.STACK_PREFIX}-isolated{index}")
                 Tags.of(subnet).add("kubernetes.io/role/internal-elb", "true")
                 Tags.of(subnet).add(
-                    f"kubernetes.io/cluster/{constants.STACK_PREFIX}EKSCluster", "owned"
+                    f"kubernetes.io/cluster/{constants.STACK_PREFIX}-eks-cluster",
+                    "owned",
                 )
 
             # Add required VPC endpoints
@@ -151,5 +154,11 @@ class VpcStack(Stack):
         return self.vpc
 
     @property
-    def get_subnets(self) -> ec2.Subnet:
-        return self.SubnetSelection
+    def get_subnets(self) -> List[ec2.ISubnet]:
+        if constants.AWS_PRIVATE_SUBNET_IDS:
+            return [
+                ec2.Subnet.from_subnet_id(self, f"Subnet{i}", subnet_id)
+                for i, subnet_id in enumerate(constants.AWS_PRIVATE_SUBNET_IDS)
+            ]
+        else:
+            return [subnet for subnet in self.vpc.private_subnets]
