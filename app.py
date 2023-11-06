@@ -44,4 +44,7 @@ rds_stack = RdsStack(
     subnets=vpc_stack.get_subnets,
 )
 
-app.synth()
+app.synth(
+    validate_on_synthesis=True,
+    force=True,
+)

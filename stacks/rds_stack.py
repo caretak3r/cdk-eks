@@ -82,7 +82,7 @@ class RdsStack(Stack):
             security_groups=[db_security_group],
             subnet_group=rds.SubnetGroup(
                 self,
-                id=f"{constants.STACK_PREFIX}-SubnetGroup",
+                id=f"{constants.STACK_PREFIX}-AuroraSubnetGroup",
                 vpc=vpc,
                 description=id + " Subnet group for RDS",
                 vpc_subnets=vpc_subnets,
