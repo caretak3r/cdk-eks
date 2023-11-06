@@ -160,4 +160,9 @@ class VpcStack(Stack):
         if constants.AWS_PRIVATE_SUBNET_IDS:
             return constants.AWS_PRIVATE_SUBNET_IDS
         else:
-            return [subnet.subnet_id for subnet in self.vpc.selection.subnets]
+            return [
+                subnet.subnet_id
+                for subnet in self.vpc.select_subnets(
+                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+                )
+            ]
