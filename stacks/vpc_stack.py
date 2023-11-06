@@ -120,7 +120,7 @@ class VpcStack(Stack):
                 ),
             )
 
-            # CloudWatch Interface Endpoints
+            # CloudWatch Logs Interface Endpoints
             self.vpc.add_interface_endpoint(
                 "CloudWatchLogsEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
@@ -129,6 +129,8 @@ class VpcStack(Stack):
                     subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
                 ),
             )
+
+            # CloudWatch Events Interface Endpoints
             self.vpc.add_interface_endpoint(
                 "CloudWatchEventsEndpoint",
                 service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
@@ -156,9 +158,6 @@ class VpcStack(Stack):
     @property
     def get_subnets(self) -> List[ec2.ISubnet]:
         if constants.AWS_PRIVATE_SUBNET_IDS:
-            return [
-                ec2.Subnet.from_subnet_id(self, f"Subnet{i}", subnet_id)
-                for i, subnet_id in enumerate(constants.AWS_PRIVATE_SUBNET_IDS)
-            ]
+            return constants.AWS_PRIVATE_SUBNET_IDS
         else:
-            return [subnet for subnet in self.vpc.private_subnets]
+            return [subnet.subnet_id for subnet in self.vpc.selection.subnets]
