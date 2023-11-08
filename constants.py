@@ -2,7 +2,7 @@ import os
 
 # CFN Parameters
 EKS_STAGE = os.environ.get("EKS_STAGE", "beta")
-STACK_PREFIX = os.environ.get("STACK_PREFIX", "tokenprowlers")
+STACK_PREFIX = os.environ.get("STACK_PREFIX", "tkp")
 
 # AWS Parameters
 AWS_EKS_KUBERNETES_VERSION = os.environ.get("AWS_EKS_KUBERNETES_VERSION", "1.27")

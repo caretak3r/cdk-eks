@@ -22,6 +22,15 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 ---
 
+## Reference Material
+
+1. [AWS CDK commands](https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk/README.md)
+
+2. [Parameter types in CloudFormation](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/parameters-section-structure.html#parameters-section-structure-grouping)
+
+3. [CDK v2 Fargate Cluster](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_eks/FargateCluster.html)
+
+
 ## Considerations 
 
 1. Resources deployed by EKS have random characters appended to resource names. This may require some heavy configurations to control, but currently requires possible `wildcard` policy actions to support.
@@ -44,3 +53,10 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 - [X] ~~There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.~~ (v27 exists but you need to download it from git)
 
 ---
+
+## Future
+
+1. Using distroless images to support services. 
+2. Nitro images with provide out of the box node-to-node encryption, not pod-to-pod.
+3. Apprunner possibilities.
+4. 

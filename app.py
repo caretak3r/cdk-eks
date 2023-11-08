@@ -29,21 +29,8 @@ vpc_stack = VpcStack(
 )
 
 # Create an EKS Stack with Fargate workers
-eks_stack = EksStack(
-    app,
-    "EksStack",
-    stack_name=f"{constants.STACK_PREFIX}-eks-stack",
-    vpc=vpc_stack.get_vpc,
-)
+eks_stack = EksStack(app, "EksStack", stack_name=f"{constants.STACK_PREFIX}-eks-stack")
 
-rds_stack = RdsStack(
-    app,
-    "RdsStack",
-    stack_name=f"{constants.STACK_PREFIX}-rds-stack",
-    vpc=vpc_stack.get_vpc,
-)
+rds_stack = RdsStack(app, "RdsStack", stack_name=f"{constants.STACK_PREFIX}-rds-stack")
 
-app.synth(
-    validate_on_synthesis=True,
-    force=True,
-)
+app.synth(validate_on_synthesis=True, force=True)
