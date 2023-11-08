@@ -1,18 +1,93 @@
 from constructs import Construct
-from aws_cdk import Stack, CfnOutput, RemovalPolicy, Tags
+from aws_cdk import Stack, CfnOutput, RemovalPolicy, Tags, CfnParameter, Fn
 from aws_cdk import aws_eks as eks, aws_ec2 as ec2, aws_ecr as ecr, aws_logs as logs
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 import constants
 
 
 class EksStack(Stack):
-    def __init__(self, scope: Construct, id: str, vpc: ec2.Vpc, **kwargs) -> None:
+    def __init__(self, scope: Construct, id: str, **kwargs) -> None:
         super().__init__(scope, id, **kwargs)
 
         kubectl_layer = KubectlV27Layer(self, "KubectlV27Layer")
 
-        # import existing VPC
-        # vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=vpc_id) # get this from constants
+        # Allow user to pass in parameters in the synthesized cloudformation template
+        vpc_id_param = CfnParameter(
+            self,
+            "VpcId",
+            type="AWS::EC2::VPC::Id",
+            description="The ID of the VPC",
+            allowed_pattern="^vpc-[0-9a-f]{8,}$",
+            constraint_description="must be a valid VPC ID.",
+            default="vpc-0PLACEHOLDER000004",
+        )
+        # print("------------------------------------------------------------")
+        # print(f"vpc_id_param: {vpc_id_param}")
+        # print(f"type for vpc_id_param: {type(vpc_id_param)}")
+        # print(f"string for vpc_id_param: {vpc_id_param.value_as_string}")
+        # print(f"type for vpc_id_param: {type(vpc_id_param.value_as_string)}")
+        # print("------------------------------------------------------------")
+
+        azs = Fn.get_azs()
+        vpc_id = ec2.Vpc.from_vpc_attributes(
+            self, "VPC", availability_zones=azs, vpc_id=vpc_id_param.value_as_string
+        )
+        # print("------------------------------------------------------------")
+        # print(f"vpc_id: {vpc_id}")
+        # print("------------------------------------------------------------")
+
+        subnet_ids_param = CfnParameter(
+            self,
+            "SubnetIds",
+            type="List<AWS::EC2::Subnet::Id>",
+            description="The list of IDs of the private isolated subnets",
+            allowed_pattern="^(subnet-[0-9a-f]{8,},)*subnet-[0-9a-f]{8,}$",
+            constraint_description="must be a valid list of subnet IDs.",
+            default="subnet-0PLACEHOLDER000009,subnet-0PLACEHOLDER000010,subnet-0PLACEHOLDER000011",
+        )
+        print("------------------------------------------------------------")
+        print(f"subnet_ids_param: {subnet_ids_param}")
+        print(f"type for subnet_ids_param: {type(subnet_ids_param)}")
+        print(f"list for subnet_ids_param: {subnet_ids_param.value_as_list}")
+        print(f"type for subnet_ids_param: {type(subnet_ids_param.value_as_list)}")
+        print("------------------------------------------------------------")
+
+        # This will create a list of ISubnet objects, which can then be used with other methods like SubnetSelection,
+        # which can in turn be passed to some constructs. For example, FargateService accepts an argument vpc_subnets,
+        # which can use the resulting list below like this:
+
+        subnet_ids = subnet_ids_param.value_as_list
+        #subnet_ids = subnet_ids_param
+        # subnet_ids = (
+        #     "subnet-0PLACEHOLDER000009,subnet-0PLACEHOLDER000010,subnet-0PLACEHOLDER000011"
+        # )
+        vpc_subnets = ec2.SubnetSelection(
+            subnets=[
+                ec2.Subnet.from_subnet_id(self, f"Subnet{i}", subnet_id)
+                for i, subnet_id in enumerate(subnet_ids)
+            ]
+        )
+
+        # subnets = []
+        # for idx, subnet_id in enumerate(subnet_ids):
+        #     print(f"subnet_id: {subnet_id}")
+        #     subnets.append(
+        #         ec2.Subnet.from_subnet_id(
+        #             scope=self,
+        #             id=f"Subnet{idx}",
+        #             subnet_id=subnet_id,
+        #         )
+        #     )
+
+        # vpc_subnets = ec2.SubnetSelection(subnets=subnets)
+
+        print("------------------------------------------------------------")
+        print(f"subnet_ids: {subnet_ids}")
+        print(f"subnet_ids length: {len(subnet_ids)}")
+        print(f"type for subnet_ids: {type(subnet_ids)}")
+        print(f"vpc_subnets: {vpc_subnets}")
+        print(f"type for vpc_subnets: {type(vpc_subnets)}")
+        print("------------------------------------------------------------")
 
         # Create a Fargate EKS cluster in the VPC from the VPC Stack
         self.cluster = eks.FargateCluster(
@@ -46,13 +121,12 @@ class EksStack(Stack):
             # role=cluster_admin_role,  # Use the cluster admin role created above (Automatically created for you)
             # security_group=cluster_security_group,  # Use the cluster security group created above (Automatically created for you)
             version=eks.KubernetesVersion.V1_27,
-            vpc=vpc,
-            vpc_subnets=[
-                ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-                {"Name": "Isolated"},
-            ],
+            vpc=vpc_id,
+            vpc_subnets=vpc_subnets,
         )
-        Tags.of(self.cluster).add("Name", f"{constants.STACK_PREFIX}-eks-cluster")
+        Tags.of(self.cluster).add(
+            "Name", f"{constants.STACK_PREFIX}-eks-fargate-cluster"
+        )
 
         # Kubernetes clusters often contain common middleware that has cross-application concerns
         # such as observability, certificate management, and more. Such middleware can be easily
