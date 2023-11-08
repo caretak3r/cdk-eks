@@ -30,6 +30,8 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 3. [CDK v2 Fargate Cluster](https://docs.aws.amazon.com/cdk/api/v2/python/aws_cdk.aws_eks/FargateCluster.html)
 
+4. [CDK Contexts](https://github.com/awsdocs/aws-cdk-guide/blob/main/v2/context.md)
+
 
 ## Considerations 
 
