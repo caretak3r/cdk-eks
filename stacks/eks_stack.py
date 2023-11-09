@@ -4,22 +4,6 @@ from aws_cdk import aws_eks as eks, aws_ec2 as ec2, aws_ecr as ecr, aws_logs as 
 from aws_cdk.aws_ec2 import SubnetFilter, SubnetSelection, Vpc
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 import constants
-import os
-
-
-def get_param(self, stack: Stack, key: str, default: str) -> str:
-    val = self.node.try_get_context(key) or default
-    # This is just to see what the stack was deployed with in the console/cfn-parameters tab:
-    CfnParameter(
-        stack,
-        key,
-        type="String",
-        default=val,
-        # Since changing it in the console won't do anything, don't let them:
-        allowed_values=[val],
-        description="CHANGE ME IN GITHUB",
-    )
-    return val
 
 
 class EksStack(Stack):
