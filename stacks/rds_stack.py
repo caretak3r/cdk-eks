@@ -98,7 +98,7 @@ class RdsStack(Stack):
                 "writer",
                 publicly_accessible=False,
                 instance_type=ec2.InstanceType.of(
-                    ec2.InstanceClass.M5, ec2.InstanceSize.XLARGE
+                    ec2.InstanceClass.M7G, ec2.InstanceSize.LARGE
                 ),
             ),
             readers=[

@@ -32,6 +32,8 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 4. [CDK Contexts](https://github.com/awsdocs/aws-cdk-guide/blob/main/v2/context.md)
 
+5. [CDK inner workings](https://github.com/Sceptre/sceptre-cdk-handler/blob/61f347a3a30d7073d6dbd539db1e84c9c4df01f6/README.md)
+
 
 ## Considerations 
 
@@ -54,6 +56,12 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 - [X] ~~There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.~~ (v27 exists but you need to download it from git)
 
+- [ ] Is it possible to not use lookup or from functions to determine the parameter types? User passes in vpc string and subnet lists string, and we convert to the correct types to use for the FargateCluster construct? 
+
+- [ ] Bootstrapless CDK - to hand a customer a self-deployable template to deploy to their account, ECR repo will already exist, and customer will provide a certificate
+
+- [ ] Use cert-manager to manage certs? - short lived private ACM? Or just have customer provide a cert, and we create self-signed for internal uses
+
 ---
 
 ## Future
@@ -61,4 +69,5 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 1. Using distroless images to support services. 
 2. Nitro images with provide out of the box node-to-node encryption, not pod-to-pod.
 3. Apprunner possibilities.
-4. 
+
+
