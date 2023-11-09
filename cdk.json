@@ -5,6 +5,8 @@
     "aws-cdk:enableStackNameDuplicates": "true",
     "aws-cdk:stackName": "cdk-stack",
     "aws-cdk:versionReporting": "false",
-    "aws-cdk:appEntrypoint": "app.py"
+    "aws-cdk:appEntrypoint": "app.py",
+    "VpcId": "vpc-05ad518cb820a49f4",
+    "SubnetIds": "subnet-018a105b9762fc5f4,subnet-09be4c2e2e4be3abc,subnet-01358eb54919279c6"
   }
 }
