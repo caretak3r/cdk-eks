@@ -4,21 +4,13 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 ---
 
-## Todo
-
-1. https://docs.aws.amazon.com/prescriptive-guidance/latest/patterns/configure-mutual-tls-authentication-for-applications-running-on-amazon-eks.html
-
-2. https://eksctl.io/usage/kms-encryption/
-
-3. Use an existing VPC from the customer if passed in as a parameter input during synthesis-time. VPC stack needs to lookup the vpc-id provided and determine which subnets to use as well. 
-
----
-
 ## Requirements
 
 1. The VPC must have DNS hostname and DNS resolution support. Otherwise, nodes can't register to your cluster. For more information, see DNS attributes for your VPC in the Amazon VPC User Guide.
 
 2. Support envelope encryption for EKS via KMS.
+
+3. Use an existing VPC from the customer if passed in as a parameter input during synthesis-time. VPC stack needs to lookup the vpc-id provided and determine which subnets to use as well. 
 
 ---
 
@@ -61,6 +53,10 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 - [ ] Bootstrapless CDK - to hand a customer a self-deployable template to deploy to their account, ECR repo will already exist, and customer will provide a certificate
 
 - [ ] Use cert-manager to manage certs? - short lived private ACM? Or just have customer provide a cert, and we create self-signed for internal uses
+
+- [ ] How does the kubectl layer work? So far we get a lambda + layer deployed, but what else is required? Do we even need it, if we're going to deploy manifests/charts to kubernetes in CDK/CDK8s?
+
+- [ ] Use cdk-nag https://github.com/cdklabs/cdk-nag
 
 ---
 
