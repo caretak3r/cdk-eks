@@ -6,15 +6,15 @@ CUSTOMER_SUBNET_IDS?=subnet-0PLACEHOLDER000009,subnet-0PLACEHOLDER000010,subnet-
 
 
 synth:
-	export AWS_ACCOUNT=$(AWS_ACCOUNT) AWS_REGION=$(AWS_REGION) && cdk synth --parameters VpcId=$(CUSTOMER_VPC_ID) SubnetIds=$(CUSTOMER_SUBNET_IDS)
+	export AWS_ACCOUNT=$(AWS_ACCOUNT) AWS_REGION=$(AWS_REGION) && cdk synth --parameters VpcId=$(CUSTOMER_VPC_ID) --parameters SubnetIds=$(CUSTOMER_SUBNET_IDS)
 
 deploy-py:
-	cdk deploy --app="python app.py" --require-approval=never --no-previous-parameters --parameters VpcId=$(CUSTOMER_VPC_ID) SubnetIds=$(CUSTOMER_SUBNET_IDS)
+	export AWS_ACCOUNT=$(AWS_ACCOUNT) AWS_REGION=$(AWS_REGION) && cdk deploy --app="python app.py" --require-approval=never --no-previous-parameters --parameters VpcId=$(CUSTOMER_VPC_ID) --parameters SubnetIds=$(CUSTOMER_SUBNET_IDS)
 
 deploy-all:
-	cdk deploy --all --require-approval=never --no-previous-parameters --parameters VpcId=$(CUSTOMER_VPC_ID) SubnetIds=$(CUSTOMER_SUBNET_IDS)
+	export AWS_ACCOUNT=$(AWS_ACCOUNT) AWS_REGION=$(AWS_REGION) && cdk deploy --all --require-approval=never --no-previous-parameters --parameters VpcId=$(CUSTOMER_VPC_ID) --parameters SubnetIds=$(CUSTOMER_SUBNET_IDS)
 
-deploy-clean:
+deploy:
 	cdk deploy --all --require-approval=never --no-previous-parameters
 
 docker-compose-build:

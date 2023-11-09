@@ -1,0 +1,8 @@
+vpc: <jsii._reference_map.InterfaceDynamicProxy object at 0x7f10a76c2810>
+type of vpc: <class 'jsii._reference_map.InterfaceDynamicProxy'>
+subnet_ids_param: <aws_cdk.CfnParameter object at 0x7f10a76c2290>
+type of subnet_ids_param: <class 'aws_cdk.CfnParameter'>
+subnet_ids_param.value_as_list: ['#{Token[TOKEN.22]}']
+type of subnet_ids_param.value_as_list: <class 'list'>
+vpc_subnets: [SubnetSelection(subnets=[<jsii._reference_map.InterfaceDynamicProxy object at 0x7f10a76d4510>])]
+type of vpc_subnets: <class 'list'>

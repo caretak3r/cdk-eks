@@ -76,20 +76,24 @@ class EksStack(Stack):
             "CustomerVPC",
             availability_zones=azs,
             vpc_id=vpc_id_param.value_as_string,
-            private_subnet_ids=
+            private_subnet_ids=subnet_ids_param.value_as_list,
         )
 
-        subnets = list()
-        for subnet_id in subnet_ids_param.value_as_list:
-            subnets.append(
-                ec2.Subnet.from_subnet_attributes(
-                    self,
-                    subnet_id.replace("-", "").replace("_", "").replace(" ", ""),
-                    subnet_id=subnet_id,
-                )
-            )
+        # subnets = list()
+        # for subnet_id in subnet_ids_param.value_as_list:
+        #     subnets.append(
+        #         ec2.Subnet.from_subnet_attributes(
+        #             self,
+        #             subnet_id.replace("-", "").replace("_", "").replace(" ", ""),
+        #             subnet_id=subnet_id,
+        #         )
+        #     )
+        vpc_subnets = [
+            ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_WITH_EGRESS)
+        ]
 
-        vpc_subnets = ec2.SubnetSelection(subnets=subnets)
+        print(f"vpc_subnets: {vpc_subnets}")
+        print(f"type of vpc_subnets: {type(vpc_subnets)}")
 
         # Create a Fargate EKS cluster in the VPC from the VPC Stack
         self.cluster = eks.FargateCluster(
