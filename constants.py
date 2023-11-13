@@ -6,8 +6,8 @@ STACK_PREFIX = os.environ.get("STACK_PREFIX", "tkp")
 
 # AWS Parameters
 AWS_EKS_KUBERNETES_VERSION = os.environ.get("AWS_EKS_KUBERNETES_VERSION", "1.27")
-AWS_REGION = os.environ.get("AWS_REGION", "us-west-2")
-AWS_ACCOUNT_ID = os.environ.get("AWS_ACCOUNT_ID", "728168703404")
+AWS_REGION = os.environ.get("AWS_REGION", "")
+AWS_ACCOUNT_ID = os.environ.get("AWS_ACCOUNT_ID", "")
 AWS_ECR_REPOSITORY_NAME = os.environ.get("AWS_ECR_REPOSITORY_NAME", "")
 AWS_ECR_REPOSITORY_URL = os.environ.get("AWS_ECR_REPOSITORY_URL", "")
 AWS_EXISTING_VPC = False

@@ -48,15 +48,17 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 - [X] ~~There is no upgradeable version past `aws-cdk.asset-kubectl-v20==2.1.2` (except for v21/v22), to support v27 or v28.~~ (v27 exists but you need to download it from git)
 
-- [ ] Is it possible to not use lookup or from functions to determine the parameter types? User passes in vpc string and subnet lists string, and we convert to the correct types to use for the FargateCluster construct? 
+- [X] ~~Is it possible to not use lookup or from functions to determine the parameter types? User passes in vpc string and subnet lists string, and we convert to the correct types to use for the FargateCluster construct?~~ No.
 
-- [ ] Bootstrapless CDK - to hand a customer a self-deployable template to deploy to their account, ECR repo will already exist, and customer will provide a certificate
+- [X] ~~Bootstrapless CDK - to hand a customer a self-deployable template to deploy to their account, ECR repo will already exist, and customer will provide a certificate.~~ Bootstrapless isn't really what it seems. It does without assets, but assets at some level are still needed for the cdk project to be deployed. Skip.
 
 - [ ] Use cert-manager to manage certs? - short lived private ACM? Or just have customer provide a cert, and we create self-signed for internal uses
 
 - [ ] How does the kubectl layer work? So far we get a lambda + layer deployed, but what else is required? Do we even need it, if we're going to deploy manifests/charts to kubernetes in CDK/CDK8s?
 
 - [ ] Use cdk-nag https://github.com/cdklabs/cdk-nag
+
+- [ ] How can EKS pull ECR images with the authentication token or ECR auth? Can we do this during the cdk8s stack deployment?
 
 ---
 
