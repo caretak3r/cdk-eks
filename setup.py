@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="cdk-eks-fargate",
-    version="0.1",
+    version="2.104.0",
     packages=find_packages(),
     install_requires=[
         "aws-cdk.core",
