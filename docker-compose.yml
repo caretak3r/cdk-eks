@@ -1,6 +1,7 @@
 version: '3.6'
 services:
   cdk:
+    image: tpk-cdk
     build:
       context: .
       dockerfile: Dockerfile
@@ -8,7 +9,7 @@ services:
         USER_ID: ${USER_ID:-0}
         GROUP_ID: ${GROUP_ID:-0}
     stdin_open: true # docker run -i
-    tty: true        # docker run -t
+    tty: true # docker run -t
     volumes:
       - ${HOME}/.aws:/home/cdk/.aws
-      - /c/Users/rohit/Documents/developer/projects/eks-cdk-project:/app
+      - ${PWD}:/app
