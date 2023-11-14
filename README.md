@@ -60,6 +60,13 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 - [ ] How can EKS pull ECR images with the authentication token or ECR auth? Can we do this during the cdk8s stack deployment?
 
+- [ ] Place handlers in VPC (place_cluster_handler_in_vpc)[https://github.com/aws/aws-cdk/issues/12171] apparently doesn't work. -.- Even with a VPC Endpoint for EKS. 
+
+- [ ] Better aws credentials workflow, prompt user outright for what they need to set? 
+
+- [ ] Test running this on EC2, for instance creds
+
+
 ---
 
 ## Future

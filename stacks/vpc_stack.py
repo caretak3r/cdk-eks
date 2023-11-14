@@ -50,6 +50,13 @@ class VpcStack(Stack):
             )
 
         # Add required VPC endpoints
+
+        # Lambda Interface Endpoint
+
+        # States Interface Endpoint
+
+        # EC2 Interface Endpoint
+
         # ALB Interface Endpoint
         self.vpc.add_interface_endpoint(
             "ALBInterfaceEndpoint",

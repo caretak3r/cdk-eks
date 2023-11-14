@@ -7,12 +7,10 @@ ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
-# ENV PYTHONDONTWRITEBYTECODE 1
-# ENV PYTHONFAULTHANDLER 1
-#ENV PIPENV_VENV_IN_PROJECT=1
 ENV CDK_USER=cdk
 
 # TODO: fix vulnerabilities
+# TODO: reduce image size
 
 RUN apk -v --no-cache --update add \
     shadow \
@@ -36,6 +34,7 @@ RUN mkdir -p "/home/$CDK_USER" && chown -R "$CDK_USER:$CDK_USER" "/home/$CDK_USE
 USER "$CDK_USER"
 WORKDIR /app
 
+# This is needed to build the image and distribute it. Otherwise for local testing, we mount our code directory.
 COPY --chown=cdk:cdk . /app/
 
 RUN python -m pip install --upgrade pip && \
