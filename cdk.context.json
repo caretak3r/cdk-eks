@@ -1,1 +1,28 @@
-{}
+{
+  "vpc-provider:account=728168703404:filter.vpc-id=vpc-0285a1462fad4c5f2:region=us-west-2:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-0285a1462fad4c5f2",
+    "vpcCidrBlock": "10.0.0.0/16",
+    "ownerAccountId": "728168703404",
+    "availabilityZones": [],
+    "subnetGroups": [
+      {
+        "name": "silentengineers-Isolated",
+        "type": "Isolated",
+        "subnets": [
+          {
+            "subnetId": "subnet-06e404a7e26a8b850",
+            "cidr": "10.0.0.0/19",
+            "availabilityZone": "us-west-2a",
+            "routeTableId": "rtb-0b6d1bda00c0170c6"
+          },
+          {
+            "subnetId": "subnet-0841d51a3b02bf999",
+            "cidr": "10.0.32.0/19",
+            "availabilityZone": "us-west-2b",
+            "routeTableId": "rtb-07c6e5cfa2414b839"
+          }
+        ]
+      }
+    ]
+  }
+}

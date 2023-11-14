@@ -19,22 +19,33 @@ env = {
     )
 }
 
-vpc_id = os.getenv("AWS_VPC_ID")
-private_subnet_ids = os.getenv("AWS_PRIVATE_SUBNET_IDS").split(",")
-certificate_arn = os.getenv("AWS_CERTIFICATE_ARN", "")
-ecr_repo_url = os.getenv("AWS_ECR_REPO_URL")
+env_vars = [
+    "AWS_VPC_ID",
+    "AWS_PRIVATE_SUBNET_IDS"
+    # ,
+    # "AWS_CERTIFICATE_ARN",
+    # "AWS_ECR_REPO_URL",
+]
 
-print(env)
+for var in env_vars:
+    if not os.getenv(var):
+        print(f"{var} is not set.")
+        user_input = input(f"Please enter a value for {var}: ")
+        if user_input:
+            os.environ[var] = user_input
+        else:
+            print(f"{var} is required. Exiting script.")
+            exit(1)
 
 # Create an EKS Stack with Fargate workers
 eks_stack = EksStack(
     app,
     "EksStack",
-    stack_name=f"{constants.STACK_PREFIX}-eks-stack2",
-    vpc_id=vpc_id,
-    private_subnet_ids=private_subnet_ids,
-    certificate_arn=certificate_arn,
-    ecr_repo_url=ecr_repo_url,
+    stack_name=f"{constants.STACK_PREFIX}-eks-stack-rev4",
+    vpc_id=os.getenv("AWS_VPC_ID"),
+    private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
+    certificate_arn=os.getenv("AWS_CERTIFICATE_ARN"),
+    ecr_repo_url=os.getenv("AWS_ECR_REPO_URL"),
     **env,
 )
 

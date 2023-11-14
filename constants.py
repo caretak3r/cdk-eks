@@ -3,20 +3,3 @@ import os
 # CFN Parameters
 EKS_STAGE = os.environ.get("EKS_STAGE", "beta")
 STACK_PREFIX = os.environ.get("STACK_PREFIX", "tkp")
-
-# AWS Parameters
-AWS_EKS_KUBERNETES_VERSION = os.environ.get("AWS_EKS_KUBERNETES_VERSION", "1.27")
-AWS_REGION = os.environ.get("AWS_REGION", "")
-AWS_ACCOUNT_ID = os.environ.get("AWS_ACCOUNT_ID", "")
-AWS_ECR_REPOSITORY_NAME = os.environ.get("AWS_ECR_REPOSITORY_NAME", "")
-AWS_ECR_REPOSITORY_URL = os.environ.get("AWS_ECR_REPOSITORY_URL", "")
-AWS_EXISTING_VPC = False
-AWS_VPC_ID = ""
-AWS_PRIVATE_SUBNET_IDS = []
-
-INSTALL_HELM_CHARTS = False
-
-BASTION_VPC_ID = ""
-BASTION_SUBNET_IDS = ""
-BASTION_WHITELIST_IP = ""
-BASTION_ROUTE_TABLE_ID = ""
