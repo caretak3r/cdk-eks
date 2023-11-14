@@ -41,7 +41,7 @@ for var in env_vars:
 eks_stack = EksStack(
     app,
     "EksStack",
-    stack_name=f"{constants.STACK_PREFIX}-eks-stack-rev4",
+    stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
     vpc_id=os.getenv("AWS_VPC_ID"),
     private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
     certificate_arn=os.getenv("AWS_CERTIFICATE_ARN"),

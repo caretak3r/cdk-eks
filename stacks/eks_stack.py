@@ -48,7 +48,7 @@ class EksStack(Stack):
             alb_controller=eks.AlbControllerOptions(
                 version=eks.AlbControllerVersion.V2_5_4
             ),  # Deploy the ALB controller to the cluster
-            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-rev4",
+            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
                 eks.ClusterLoggingTypes.AUDIT,
@@ -65,8 +65,9 @@ class EksStack(Stack):
             kubectl_layer=kubectl_layer,
             # masters_role= Automatically created for us
             output_config_command=True,  # Output the aws eks update-kubeconfig command
-            # place_cluster_handler_in_vpc=True,  # Place the cluster handler in the VPC
+            place_cluster_handler_in_vpc=True,  # Place the cluster handler in the VPC
             cluster_handler_environment={"AWS_STS_REGIONAL_ENDPOINTS": "regional"},
+            kubectl_environment={"AWS_STS_REGIONAL_ENDPOINTS": "regional"},
             # role=cluster_admin_role,  # Use the cluster admin role created above (Automatically created for you)
             # secrets_encryption_key = eks.SecretsEncryptionKey.KMS,  # Use the default KMS key
             # security_group=cluster_security_group,  # Use the cluster security group created above (Automatically created for you)
@@ -75,7 +76,8 @@ class EksStack(Stack):
             vpc_subnets=[ec2.SubnetSelection(subnets=subnets)],
         )
         Tags.of(self.cluster).add(
-            "Name", f"{constants.STACK_PREFIX}-eks-fargate-cluster-rev4"
+            "Name",
+            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
 
         # self.cluster.add_fargate_profile(
