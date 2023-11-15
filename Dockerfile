@@ -2,7 +2,7 @@
 ARG ALPINE_VERSION=3.18
 FROM alpine:${ALPINE_VERSION}
 
-ARG AWS_CDK_VERSION=2.106.1
+ARG AWS_CDK_VERSION=2.108.0
 ARG USER_ID=1001
 ARG GROUP_ID=1001
 ENV LANG C.UTF-8
@@ -35,7 +35,8 @@ USER "$CDK_USER"
 WORKDIR /app
 
 # This is needed to build the image and distribute it. Otherwise for local testing, we mount our code directory.
-COPY --chown=cdk:cdk . /app/
+#COPY --chown=cdk:cdk . /app/
+COPY --chown=cdk:cdk Pipfile.lock /app/
 
 RUN python -m pip install --upgrade pip && \
     python -m pip install pipenv
