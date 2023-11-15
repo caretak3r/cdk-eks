@@ -26,11 +26,11 @@
         },
         "aws-cdk-lib": {
             "hashes": [
-                "sha256:606f0663bf3427a572a45eaf2f73a657a122a94fa0dc03eb90e596930c0b65a7",
-                "sha256:cdb5648b3d5689f7475365a8946ce121df3a6d6d38ebb65a58eac7b3d0d1c01d"
+                "sha256:0c0ffa0e129782c3e69cc320297b338bbc6c994025f31d3ce310badd662e44be",
+                "sha256:86bb6488de1830d8212d33f09eea494bca138182bc4db1a151fc7925598554b7"
             ],
             "index": "pypi",
-            "version": "==2.106.1"
+            "version": "==2.108.1"
         },
         "aws-cdk.asset-awscli-v1": {
             "hashes": [
