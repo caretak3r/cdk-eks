@@ -21,10 +21,9 @@ env = {
 
 env_vars = [
     "AWS_VPC_ID",
-    "AWS_PRIVATE_SUBNET_IDS"
-    # ,
+    "AWS_PRIVATE_SUBNET_IDS",
+    "AWS_ECR_REPO_URL"
     # "AWS_CERTIFICATE_ARN",
-    # "AWS_ECR_REPO_URL",
 ]
 
 for var in env_vars:

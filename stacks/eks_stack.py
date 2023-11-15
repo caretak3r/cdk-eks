@@ -45,9 +45,9 @@ class EksStack(Stack):
             # the cluster needs the ability to provision on-demand AWS load balancers that
             # route to internal Kubernetes resources.
             # (see https://github.com/aws/aws-cdk/tree/main/packages/aws-cdk-lib/aws-eks#alb-controller)
-            alb_controller=eks.AlbControllerOptions(
-                version=eks.AlbControllerVersion.V2_5_4
-            ),  # Deploy the ALB controller to the cluster
+            # alb_controller=eks.AlbControllerOptions(
+            #     version=eks.AlbControllerVersion.V2_5_4
+            # ),  # Deploy the ALB controller to the cluster
             cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
@@ -57,7 +57,7 @@ class EksStack(Stack):
                 eks.ClusterLoggingTypes.SCHEDULER,
             ],
             core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS - default
-            endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable public and private access to the cluster endpoint
+            endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable public and private access to the cluster endpoint #TODO: test PRIVATE only
             # In addition, the `eks.Cluster` construct is able to apply Kubernetes manifests onto the
             # cluster (we will use that capability later) via the `kubectl` utility.
             # Kubernetes recommends to always match the version of `kubectl` to the version of your
