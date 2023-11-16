@@ -6,3 +6,5 @@ We want to install some helm projects:
     - aws-load-balancer-controller
     - kubeview
     - cert-manager
+
+Hosting in ECR looks like this: ![Alt text](image.png)
