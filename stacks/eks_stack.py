@@ -1,6 +1,12 @@
 from constructs import Construct
-from aws_cdk import Stack, CfnOutput, RemovalPolicy, Tags, CfnParameter, Fn, Reference
-from aws_cdk import aws_eks as eks, aws_ec2 as ec2, aws_ecr as ecr, aws_logs as logs
+from aws_cdk import Stack, CfnOutput, Tags, Fn, Aws
+from aws_cdk import (
+    aws_eks as eks,
+    aws_ec2 as ec2,
+    aws_ecr as ecr,
+    aws_logs as logs,
+    aws_iam as iam,
+)
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 import constants
 
@@ -23,12 +29,18 @@ class EksStack(Stack):
         self.certificate_arn = certificate_arn
         self.ecr_repo_url = ecr_repo_url
 
+        # region = Aws.REGION
+        # account = Aws.ACCOUNT_ID
+
+        # This is required to setup the Kubectl + Helm3 layer and gets passed to the eks.FargateCluster construct
         kubectl_layer = KubectlV27Layer(self, "KubectlV27Layer")
 
+        # We get the VPC type from the provided environment variable
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
         # TODO: we should tag the VPC and subnets since the customer won't, look at vpc_stack.py
         # TODO:  Please note when using an existing VPC, please make sure its private subnets have been tagged with "kubernetes.io/role/internal-elb: 1"
 
+        # We get the subnets type from the provided environment variable
         subnets = [
             ec2.Subnet.from_subnet_attributes(
                 self, f"Subnet{n}", subnet_id=self.private_subnet_ids[n]
@@ -41,6 +53,7 @@ class EksStack(Stack):
         self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
+            # This ONLY WORKS if VPC has a route to the public internet. Otherwise we deploy the ALB controller manually.
             # In order to access applications inside the clusters from the internet,
             # the cluster needs the ability to provision on-demand AWS load balancers that
             # route to internal Kubernetes resources.
@@ -58,10 +71,6 @@ class EksStack(Stack):
             ],
             core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS - default
             endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable public and private access to the cluster endpoint #TODO: test PRIVATE only
-            # In addition, the `eks.Cluster` construct is able to apply Kubernetes manifests onto the
-            # cluster (we will use that capability later) via the `kubectl` utility.
-            # Kubernetes recommends to always match the version of `kubectl` to the version of your
-            # cluster.
             kubectl_layer=kubectl_layer,
             # masters_role= Automatically created for us
             output_config_command=True,  # Output the aws eks update-kubeconfig command
@@ -79,6 +88,49 @@ class EksStack(Stack):
             "Name",
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
+
+        # Install AWS Load Balancer Controller since we can't use the eks.Cluster construct's alb_controller option
+        # since it needs the internet to download. We source from ECR private instead.
+
+        # 1. Creates and Service account for our cluster to add a load Balancer
+        alb_service_account = eks.ServiceAccount(
+            self,
+            "ALBServiceAccount",
+            cluster=self.cluster,
+            name="aws-load-balancer-controller",
+            namespace="kube-system",
+        )
+
+        with open("../policies/alb-svca-iam-policy.json", mode="r") as file:
+            policy_document = file.read()
+
+            for statement in policy_document.json()["Statement"]:
+                alb_policy_statement = iam.PolicyStatement.from_json(statement)
+                alb_service_account.add_to_principal_policy(alb_policy_statement)
+
+        # 2. Creates a Helm chart for the AWS Load Balancer Controller
+        add_alb_chart = self.cluster.add_helm_chart(
+            "aws-load-balancer-controller",
+            repository=f"oci://{self.ecr_repo_url}",
+            chart="capitalone",
+            version="1.6.2-aws-load-balancer-controller-helm-chart",
+            release="aws-load-balancer-controller",
+            namespace=alb_service_account.service_account_namespace,
+            values={
+                "clusterName": self.cluster.cluster_name,
+                "serviceAccount": {
+                    "create": False,
+                    "name": alb_service_account.service_account_name,
+                },
+                "enableShield": False,
+                "enableWaf": False,
+                "enableWafv2": False,
+            },
+        )
+
+        add_alb_chart.node.add_dependency(alb_service_account)
+
+        # TODO: add IAM role mapping to the cluster to view it
 
         # self.cluster.add_fargate_profile(
         #     "ObservabilityProfile",

@@ -12,3 +12,5 @@ cdk.out
 .vscode
 cdk.context.json
 helm/eks-charts
+helm/*
+helm/aws-load-balancer-controller/Chart.yaml
