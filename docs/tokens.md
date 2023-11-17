@@ -4,4 +4,4 @@ We will see a string containing a sequence of random characters if we log the to
 
 At a later stage, when the token’s value (for example, a VPC ID) is available, CDK will replace it with the actual value.
 
- It will only be available at CloudFormation execution time. It’s the last stage when CloudFormation creates or updates the resources that we have defined in the CDK app code. The process will resolve most placeholder (token) values at this phase.
+It will only be available at CloudFormation execution time. It’s the last stage when CloudFormation creates or updates the resources that we have defined in the CDK app code. The process will resolve most placeholder (token) values at this phase.

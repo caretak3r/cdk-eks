@@ -19,6 +19,7 @@ RUN apk -v --no-cache --update add \
     python3 \
     py3-pip \
     aws-cli \
+    bash \
     make \
     jq \
     && \
