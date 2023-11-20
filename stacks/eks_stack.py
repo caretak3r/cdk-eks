@@ -31,9 +31,6 @@ class EksStack(Stack):
         self.certificate_arn = certificate_arn
         self.ecr_repo_url = ecr_repo_url
 
-        # region = Aws.REGION
-        # account = Aws.ACCOUNT_ID
-
         # This is required to setup the Kubectl + Helm3 layer and gets passed to the eks.FargateCluster construct
         kubectl_layer = KubectlV27Layer(self, "KubectlV27Layer")
 
@@ -91,6 +88,16 @@ class EksStack(Stack):
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
 
+        # IAM mapping
+        self.add_admin_role_to_cluster()
+        self.add_cluster_admin()
+
+        authorized_role_list = ['']
+        # add permissions to iam user so see the cluster
+        for user in authorized_role_list:
+            auth_user = iam.User.from_user_name(self, "MyImportedUserByName", user)
+            self.cluster.aws_auth.add_role_mapping(auth_user, groups=["system:masters"])
+
         # Install AWS Load Balancer Controller since we can't use the eks.Cluster construct's alb_controller option
         # since it needs the internet to download. We source from ECR private instead.
 
@@ -132,6 +139,8 @@ class EksStack(Stack):
                 "enableWafv2": False,
             },
         )
+
+        print(add_alb_chart.to_string())
 
         add_alb_chart.node.add_dependency(alb_service_account)
 
@@ -194,3 +203,48 @@ class EksStack(Stack):
         # TODO: configure a proper rentention policy for the log group
         # TODO: add a data protection policy
         # TODO: add a description to the log group
+
+    def add_admin_role_to_cluster(self) -> None:
+        admin_role_name = self.node.try_get_context("eks_admin_role_name")
+        if admin_role_name is None:
+            return
+
+        account_id = Aws.ACCOUNT_ID
+        admin_role = iam.Role.from_role_arn(
+            self, "admin_role", f"arn:aws:iam::{account_id}:role/{admin_role_name}"
+        )
+        self.cluster.aws_auth.add_masters_role(admin_role)
+
+    def add_cluster_admin(self, name="eks-admin"):
+    # Add admin privileges so we can sign in to the dashboard as the service account
+        sa = self.cluster.add_manifest(
+            "eks-admin-sa",
+            {
+                "apiVersion": "v1",
+                "kind": "ServiceAccount",
+                "metadata": {
+                    "name": name,
+                    "namespace": "kube-system",
+                },
+            },
+        )
+        binding = self.cluster.add_manifest(
+            "eks-admin-rbac",
+            {
+                "apiVersion": "rbac.authorization.k8s.io/v1beta1",
+                "kind": "ClusterRoleBinding",
+                "metadata": {"name": name},
+                "roleRef": {
+                    "apiGroup": "rbac.authorization.k8s.io",
+                    "kind": "ClusterRole",
+                    "name": "cluster-admin",
+                },
+                "subjects": [
+                    {
+                        "kind": "ServiceAccount",
+                        "name": name,
+                        "namespace": "kube-system",
+                    }
+                ],
+            },
+        )

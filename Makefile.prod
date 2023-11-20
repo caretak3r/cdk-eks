@@ -11,6 +11,6 @@ synth:
 	cdk synth
 
 deploy:
-	cdk deploy --require-approval=never --no-previous-parameters --no-rollback
+	cdk deploy --require-approval=never --no-previous-parameters
 
 .PHONY: bootstrap synth deploy
