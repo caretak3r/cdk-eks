@@ -9,6 +9,8 @@ from aws_cdk import (
 )
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
 import constants
+import os
+import json
 
 
 class EksStack(Stack):
@@ -101,14 +103,17 @@ class EksStack(Stack):
             namespace="kube-system",
         )
 
-        with open("../policies/alb-svca-iam-policy.json", mode="r") as file:
-            policy_document = file.read()
 
-            for statement in policy_document.json()["Statement"]:
+        dir_path = os.path.dirname(os.path.realpath(__file__))
+        file_path = os.path.join(dir_path, "alb-svca-iam-policy.json")
+        with open(file_path, mode="r") as file:
+            policy_document = json.load(file)
+
+            for statement in policy_document["Statement"]:
                 alb_policy_statement = iam.PolicyStatement.from_json(statement)
                 alb_service_account.add_to_principal_policy(alb_policy_statement)
 
-        # 2. Creates a Helm chart for the AWS Load Balancer Controller
+        # 2. Creates a Helm chart for the AWS Load  Balancer Controller
         add_alb_chart = self.cluster.add_helm_chart(
             "aws-load-balancer-controller",
             repository=f"oci://{self.ecr_repo_url}",
