@@ -1,5 +1,5 @@
 #!/bin/bash
-trap 'echo "\n Script interrupted by user. Returning to shell."; exit' INT
+trap 'echo "\n Script interrupted by user. Returning to shell."; /bin/bash' INT
 export trap
 
 function prompt_aws_credentials() {
@@ -67,7 +67,7 @@ function check_credentials() {
 }
 
 function prompt_aws_ecr_repo_url() {
-    read -p "Enter your AWS ECR Repo URI (private ECR uri looks like: 728168703404.dkr.ecr.us-west-2.amazonaws.com/platform): " AWS_ECR_REPO_URL
+    read -p "Enter your AWS ECR Repo URI (private ECR uri looks like: 728168703404.dkr.ecr.us-west-2.amazonaws.com/<some name>): " AWS_ECR_REPO_URL
     REPO_LIST=$(aws ecr describe-repositories --profile "$AWS_PROFILE" --region "$AWS_REGION" --output json | jq -r '.repositories[].repositoryUri')
     if echo "$REPO_LIST" | grep -q "$AWS_ECR_REPO_URL"; then
         export AWS_ECR_REPO_URL
@@ -290,4 +290,3 @@ function main() {
 
 # main function call
 main
-
