@@ -8,8 +8,6 @@ aws-cdk-lib = "*"
 "aws-cdk.lambda-layer-kubectl-v27" = "*"
 constructs = "*"
 python-dotenv = "*"
-cdk8s-plus-27 = "*"
-cdk8s = "*"
 
 [dev-packages]
 
