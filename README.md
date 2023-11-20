@@ -66,13 +66,12 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 - [ ] Test running this on EC2, for instance creds
 
+- [ ] Set endpoint to PRIVATE
 
----
+- [ ] Ensure security groups are set correctly
 
-## Future
+- [ ] ALB not being setup properly?
 
-1. Using distroless images to support services. 
-2. Nitro images with provide out of the box node-to-node encryption, not pod-to-pod.
-3. Apprunner possibilities.
+- [ ] Give a user a fully configured IAM policy or ROLE to use for the cloudformation stack execution - default is AdminAccess 
 
-
+- 
