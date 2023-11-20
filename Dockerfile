@@ -14,7 +14,6 @@ ENV CDK_USER=cdk
 
 RUN apk -v --no-cache --update add \
     shadow \
-    git \
     npm \
     python3 \
     py3-pip \
@@ -35,13 +34,9 @@ RUN mkdir -p "/home/$CDK_USER" && chown -R "$CDK_USER:$CDK_USER" "/home/$CDK_USE
 USER "$CDK_USER"
 WORKDIR /app
 
-# This is needed to build the image and distribute it. Otherwise for local testing, we mount our code directory.
-#COPY --chown=cdk:cdk . /app/
-COPY --chown=cdk:cdk Pipfile.lock /app/
+COPY --chown=cdk:cdk . /app/
 
-RUN python -m pip install --upgrade pip && \
-    python -m pip install pipenv
-RUN python -m pipenv requirements > requirements.txt
 RUN pip install -r requirements.txt
 
-CMD ["/bin/sh"]
+#CMD ["/bin/sh"]
+ENTRYPOINT ["/bin/bash", "/app/install.sh"]
