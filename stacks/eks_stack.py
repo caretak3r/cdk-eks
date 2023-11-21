@@ -36,8 +36,8 @@ class EksStack(Stack):
 
         # We get the VPC type from the provided environment variable
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
-        # TODO: we should tag the VPC and subnets since the customer won't, look at vpc_stack.py
-        # TODO:  Please note when using an existing VPC, please make sure its private subnets have been tagged with "kubernetes.io/role/internal-elb: 1"
+        # TODO: We should tag the VPC and subnets since the customer won't, look at vpc_stack.py
+        # TODO: Please note when using an existing VPC, please make sure its private subnets have been tagged with "kubernetes.io/role/internal-elb: 1"
 
         # We get the subnets type from the provided environment variable
         subnets = [
@@ -52,14 +52,6 @@ class EksStack(Stack):
         self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
-            # This ONLY WORKS if VPC has a route to the public internet. Otherwise we deploy the ALB controller manually.
-            # In order to access applications inside the clusters from the internet,
-            # the cluster needs the ability to provision on-demand AWS load balancers that
-            # route to internal Kubernetes resources.
-            # (see https://github.com/aws/aws-cdk/tree/main/packages/aws-cdk-lib/aws-eks#alb-controller)
-            # alb_controller=eks.AlbControllerOptions(
-            #     version=eks.AlbControllerVersion.V2_5_4
-            # ),  # Deploy the ALB controller to the cluster
             cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
@@ -88,15 +80,36 @@ class EksStack(Stack):
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
 
-        # IAM mapping
-        self.add_admin_role_to_cluster()
-        self.add_cluster_admin()
+        # IAM: Add IAM roles from constants to the `system:masters` group
+        # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
+        # FIXME: this runs successfully the first time, but fails on subsequent runs - kubectl apply AlreadyExists error
+        # for role in constants.AUTHORIZED_ROLE_LIST:
+        #     auth_role = iam.Role.from_role_arn(
+        #         self, f"ImportedIAMRole{role.split('/')[-1]}", role
+        #     )
+        #     # self.cluster.aws_auth.add_role_mapping(auth_role, groups=["system:masters"])
+        #     self.cluster.aws_auth.add_masters_role(auth_role)
 
-        authorized_role_list = ['']
-        # add permissions to iam user so see the cluster
-        for user in authorized_role_list:
-            auth_user = iam.User.from_user_name(self, "MyImportedUserByName", user)
-            self.cluster.aws_auth.add_role_mapping(auth_user, groups=["system:masters"])
+        #     self.cluster.add_manifest(
+        #         f"AdminRoleManifest{role.split('/')[-1]}",
+        #         {
+        #             "apiVersion": "rbac.authorization.k8s.io/v1",
+        #             "kind": "ClusterRoleBinding",
+        #             "metadata": {"name": "admin-role-binding"},
+        #             "roleRef": {
+        #                 "apiGroup": "rbac.authorization.k8s.io",
+        #                 "kind": "ClusterRole",
+        #                 "name": "cluster-admin",
+        #             },
+        #             "subjects": [
+        #                 {
+        #                     "kind": "ServiceAccount",
+        #                     "name": auth_role.role_name,
+        #                     "namespace": "kube-system",
+        #                 }
+        #             ],
+        #         },
+        #     )
 
         # Install AWS Load Balancer Controller since we can't use the eks.Cluster construct's alb_controller option
         # since it needs the internet to download. We source from ECR private instead.
@@ -110,9 +123,8 @@ class EksStack(Stack):
             namespace="kube-system",
         )
 
-
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        file_path = os.path.join(dir_path, "alb-svca-iam-policy.json")
+        file_path = os.path.join(dir_path, "../policies/alb-svca-iam-policy.json")
         with open(file_path, mode="r") as file:
             policy_document = json.load(file)
 
@@ -139,49 +151,36 @@ class EksStack(Stack):
                 "enableWafv2": False,
             },
         )
-
-        print(add_alb_chart.to_string())
-
         add_alb_chart.node.add_dependency(alb_service_account)
 
-        # TODO: add IAM role mapping to the cluster to view it
-
-        # self.cluster.add_fargate_profile(
-        #     "ObservabilityProfile",
-        #     selectors=[
-        #         eks.Selector(
-        #             namespace="observability",
-        #             labels={"app.kubernetes.io/name": "kubeview"},
-        #         )
-        #     ],
-        # )
-
+        # Add kubeview
         # Kubernetes clusters often contain common middleware that has cross-application concerns
         # such as observability, certificate management, and more. Such middleware can be easily
         # installed with [helm](https://helm.sh/), which is natively supported by the `eks.Cluster` construct.
         # In this example, we install KubeView, a visualizer that helps you understand the relationships
         # between Kubernetes resources in your cluster.
         # (see https://artifacthub.io/packages/helm/kubeview/kubeview)
-        # self.cluster.add_helm_chart(
-        #     "KubeView",
-        #     repository="https://benc-uk.github.io/kubeview/charts",
-        #     chart="kubeview",
-        #     namespace="kube-system",
-        #     values={
-        #         # control the service name since we will need to
-        #         # reference to it from our app
-        #         "fullnameOverride": "kubeview"
-        #     },
-        # )
+        self.cluster.add_helm_chart(
+            "KubeView",
+            repository=f"oci://{self.ecr_repo_url}",
+            chart="platform",
+            version="0.1.31-kubeview",
+            namespace="kube-system",
+            values={
+                # control the service name since we will need to
+                # reference to it from our app
+                "fullnameOverride": "kubeview"
+            },
+        )
         # # Kubeview is exposed via an ELB, and to access it, we need to fetch its generated DNS address.
         # # The address is stored in the state of the Kubernetes service that is backed by the ELB, and
         # # can be fetched using the `getServiceLoadBalancerAddress` method:
-        # kube_view_address = self.cluster.get_service_load_balancer_address(
-        #     "kubeview", namespace="kube-system"
-        # )
+        kube_view_address = self.cluster.get_service_load_balancer_address(
+            "kubeview", namespace="kube-system"
+        )
         # # We also define a CloudFormation output for this value, so that we can see it once
         # # deployment finishes successfully.
-        # CfnOutput(self, "KubeViewEndpoint", value=f"http://{kube_view_address}")
+        CfnOutput(self, "KubeViewEndpoint", value=f"http://{kube_view_address}")
 
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "AWS REGION", value=self.region)
@@ -191,60 +190,5 @@ class EksStack(Stack):
         CfnOutput(self, "ClusterEndpoint", value=self.cluster.cluster_endpoint)
         CfnOutput(self, "Vpc-Id", value=vpc_id)
         CfnOutput(self, "Subnet-Ids", value=Fn.join(",", private_subnet_ids))
-
-        # # Logging setup
-        # logs.LogGroup(
-        #     self,
-        #     "aws/eks/logs",
-        #     retention=logs.RetentionDays.ONE_WEEK,
-        #     log_group_name=f"{constants.STACK_PREFIX}-eks-cluster-log-group",
-        #     removal_policy=RemovalPolicy.DESTROY,
-        # )
-        # TODO: configure a proper rentention policy for the log group
-        # TODO: add a data protection policy
-        # TODO: add a description to the log group
-
-    def add_admin_role_to_cluster(self) -> None:
-        admin_role_name = self.node.try_get_context("eks_admin_role_name")
-        if admin_role_name is None:
-            return
-
-        account_id = Aws.ACCOUNT_ID
-        admin_role = iam.Role.from_role_arn(
-            self, "admin_role", f"arn:aws:iam::{account_id}:role/{admin_role_name}"
-        )
-        self.cluster.aws_auth.add_masters_role(admin_role)
-
-    def add_cluster_admin(self, name="eks-admin"):
-    # Add admin privileges so we can sign in to the dashboard as the service account
-        sa = self.cluster.add_manifest(
-            "eks-admin-sa",
-            {
-                "apiVersion": "v1",
-                "kind": "ServiceAccount",
-                "metadata": {
-                    "name": name,
-                    "namespace": "kube-system",
-                },
-            },
-        )
-        binding = self.cluster.add_manifest(
-            "eks-admin-rbac",
-            {
-                "apiVersion": "rbac.authorization.k8s.io/v1beta1",
-                "kind": "ClusterRoleBinding",
-                "metadata": {"name": name},
-                "roleRef": {
-                    "apiGroup": "rbac.authorization.k8s.io",
-                    "kind": "ClusterRole",
-                    "name": "cluster-admin",
-                },
-                "subjects": [
-                    {
-                        "kind": "ServiceAccount",
-                        "name": name,
-                        "namespace": "kube-system",
-                    }
-                ],
-            },
-        )
+        CfnOutput(self, "CertificateArn", value=self.certificate_arn)
+        CfnOutput(self, "ECRRepoURL", value=self.ecr_repo_url)

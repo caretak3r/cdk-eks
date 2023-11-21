@@ -1,5 +1,5 @@
 #!/bin/bash
-trap 'echo "\n Script interrupted by user. Returning to shell."; /bin/bash' INT
+trap 'echo "\nScript interrupted by user. Returning to the shell."; /bin/bash' INT
 export trap
 
 function prompt_aws_credentials() {
