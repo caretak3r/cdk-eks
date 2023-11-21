@@ -1,0 +1,11 @@
+arn:aws:acm:us-west-2:728168703404:certificate/d1f09e52-6a3f-4ec6-8846-592b168c4ee4
+
+728168703404
+
+arn:aws:kms:us-west-2:728168703404:key/450c6d65-d5c6-402b-995a-bd78c993bfbd
+
+vpc-0285a1462fad4c5f2
+
+subnet-06e404a7e26a8b850,subnet-0841d51a3b02bf999
+
+728168703404.dkr.ecr.us-west-2.amazonaws.com/capitalone
