@@ -43,7 +43,7 @@ class VpcStack(Stack):
 
         for index, subnet in enumerate(selection.subnets, start=1):
             Tags.of(subnet).add("Name", f"{constants.STACK_PREFIX}-isolated{index}")
-            Tags.of(subnet).add("kubernetes.io/role/internal-elb", "true")
+            Tags.of(subnet).add("kubernetes.io/role/internal-elb", "1")
             Tags.of(subnet).add(
                 f"kubernetes.io/cluster/{constants.STACK_PREFIX}-eks-cluster",
                 "owned",
@@ -52,10 +52,35 @@ class VpcStack(Stack):
         # Add required VPC endpoints
 
         # Lambda Interface Endpoint
+        self.vpc.add_interface_endpoint(
+            "LambdaInterfaceEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.LAMBDA_,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
 
-        # States Interface Endpoint
+        # Step Functions Sync Interface Endpoint
+        self.vpc.add_interface_endpoint(
+            "StatesInterfaceEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.STEP_FUNCTIONS,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
+        # Step Functions Sync Interface Endpoint
+        self.vpc.add_interface_endpoint(
+            "StatesSyncInterfaceEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.STEP_FUNCTIONS_SYNC,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
 
         # EC2 Interface Endpoint
+        self.vpc.add_interface_endpoint(
+            "EC2InterfaceEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.EC2,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
 
         # ALB Interface Endpoint
         self.vpc.add_interface_endpoint(
@@ -135,15 +160,3 @@ class VpcStack(Stack):
     @property
     def get_vpc(self) -> ec2.Vpc:
         return self.vpc
-
-    @property
-    def get_subnets(self):
-        if constants.AWS_PRIVATE_SUBNET_IDS:
-            return constants.AWS_PRIVATE_SUBNET_IDS
-        else:
-            return [
-                subnet.subnet_id
-                for subnet in self.vpc.select_subnets(
-                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-                )
-            ]
