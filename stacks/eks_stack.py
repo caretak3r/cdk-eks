@@ -149,6 +149,10 @@ class EksStack(Stack):
                 "enableShield": False,
                 "enableWaf": False,
                 "enableWafv2": False,
+                "vpcId": self.vpc_id,
+                "logLevel": "debug",
+                "defaultTags": {},
+                "defaultTargetType": "ip",
             },
         )
         add_alb_chart.node.add_dependency(alb_service_account)
@@ -192,3 +196,8 @@ class EksStack(Stack):
         CfnOutput(self, "Subnet-Ids", value=Fn.join(",", private_subnet_ids))
         CfnOutput(self, "CertificateArn", value=self.certificate_arn)
         CfnOutput(self, "ECRRepoURL", value=self.ecr_repo_url)
+        CfnOutput(
+            self,
+            "ALBServiceAccountName",
+            value=alb_service_account.service_account_name,
+        )
