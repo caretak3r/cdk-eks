@@ -74,4 +74,5 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 - [ ] Give a user a fully configured IAM policy or ROLE to use for the cloudformation stack execution - default is AdminAccess 
 
-- 
+---
+
