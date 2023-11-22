@@ -36,6 +36,13 @@ Please note that you will need to manually create and configure subnets within t
 
 ### Subnets
 
+Private subnets – Must be tagged in the following format. This is so that Kubernetes and the AWS load balancer controller know that the subnets can be used for internal load balancers. If you use eksctl or an Amazon EKS AWS CloudFormation template to create your VPC after March 26, 2020, the subnets are tagged appropriately when created. For more information about the Amazon EKS AWS CloudFormation VPC templates, see Creating a VPC for your Amazon EKS cluster.
+
+    Key – kubernetes.io/role/internal-elb
+    Value – 1
+
+
+
 ### VPC Endpoints
 To create the necessary VPC endpoints for a fully private EKS, follow the steps below:
 
@@ -57,7 +64,7 @@ To create the necessary VPC endpoints for a fully private EKS, follow the steps 
        - com.amazonaws.region.states
        - com.amazonaws.region.sync-states
        - com.amazonaws.region.cloudformation
-       
+
     - Create an S3 VPC Gateway"
        - com.amazonaws.region.s3
    - In the 'VPC' dropdown, select the VPC you created for your EKS.
@@ -66,3 +73,5 @@ To create the necessary VPC endpoints for a fully private EKS, follow the steps 
    - Click on 'Create endpoint'.
 
 Repeat these steps for each of the required services. This will create the necessary VPC endpoints for a fully private EKS.
+
+
