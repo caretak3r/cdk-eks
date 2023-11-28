@@ -7,4 +7,4 @@ We want to install some helm projects:
     - kubeview
     - cert-manager
 
-Hosting in ECR looks like this: ![Alt text](image.png)
+Hosting in ECR looks like this: ![Alt text](image-3.png)
