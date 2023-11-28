@@ -1,16 +1,26 @@
-from constructs import Construct
-from aws_cdk import Stack, CfnOutput, Tags, Fn, Aws
+import json
+import os
+
+from aws_cdk import Aws, CfnOutput, Fn, Stack, Tags
+from aws_cdk import (
+    aws_ec2 as ec2,
+)
+from aws_cdk import (
+    aws_ecr as ecr,
+)
 from aws_cdk import (
     aws_eks as eks,
-    aws_ec2 as ec2,
-    aws_ecr as ecr,
-    aws_logs as logs,
+)
+from aws_cdk import (
     aws_iam as iam,
 )
+from aws_cdk import (
+    aws_logs as logs,
+)
 from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
+from constructs import Construct
+
 import constants
-import os
-import json
 
 
 class EksStack(Stack):
@@ -122,7 +132,7 @@ class EksStack(Stack):
             name="aws-load-balancer-controller",
             namespace="kube-system",
         )
-
+        # 2. Creates an IAM policy for the service account
         dir_path = os.path.dirname(os.path.realpath(__file__))
         file_path = os.path.join(dir_path, "../policies/alb-svca-iam-policy.json")
         with open(file_path, mode="r") as file:
@@ -132,7 +142,7 @@ class EksStack(Stack):
                 alb_policy_statement = iam.PolicyStatement.from_json(statement)
                 alb_service_account.add_to_principal_policy(alb_policy_statement)
 
-        # 2. Creates a Helm chart for the AWS Load  Balancer Controller
+        # 3. Creates a Helm chart for the AWS Load  Balancer Controller
         add_alb_chart = self.cluster.add_helm_chart(
             "aws-load-balancer-controller",
             repository=f"oci://{self.ecr_repo_url}",
@@ -156,6 +166,34 @@ class EksStack(Stack):
             },
         )
         add_alb_chart.node.add_dependency(alb_service_account)
+
+        # Install cert-manager helm chart from ECR private
+        # 1. Creates a Helm chart for the cert-manager
+        add_cert_manager_chart = self.cluster.add_helm_chart(
+            "cert-manager",
+            repository=f"oci://{self.ecr_repo_url}",
+            chart="cert-manager",
+            version="1.13.2-cert-manager-helm-chart",
+            release="cert-manager",
+            namespace="cert-manager",
+            values={
+                "installCRDs": True,
+                "webhook": {
+                    "securePort": 10260,  # Fargate requirement
+                    "replicaCount": 2,
+                },
+                "cainjector": {
+                    "enabled": True,
+                    "replicaCount": 2,
+                },
+                "prometheus": {
+                    "enabled": True,
+                },
+                "metrics": {
+                    "enabled": False,
+                },
+            },
+        )
 
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "AWS REGION", value=self.region)
