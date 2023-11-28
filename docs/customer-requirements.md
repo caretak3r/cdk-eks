@@ -7,12 +7,12 @@ This guide describes how to create a "zero-trust" networking environment in AWS.
 
 ## AWS Infrastructure
 
-1. Virtual Private Cloud (VPC)
-2. Subnets
-3. Route Tables
-4. VPC Endpoints
-5. IAM Permissions
-6. Elastic Container Repository (ECR)
+0. IAM Permissions
+1. Elastic Container Repository (ECR)
+2. Virtual Private Cloud (VPC)
+3. Subnets
+4. Route Tables
+5. VPC Endpoints
 
 
 ## AWS Network Setup
