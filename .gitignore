@@ -17,6 +17,10 @@ helm/*
 !helm/kubernetes-dashboard/*
 !helm/aws-load-balancer-controller
 !helm/aws-load-balancer-controller/*
+!helm/cert-manager
+!helm/cert-manager/deploy/charts/*
+!helm/metrics-server
+!helm/metrics-server/charts/*
 .env-customer
 *.log
 .env
