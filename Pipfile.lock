@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "1d0ba1f569e8a66358368057cc4ae49683aa308b54f0c699fe8ef99203054019"
+            "sha256": "6ddec85314aa464a969a9d14fb4f8b0cab3ff72781401dff1ad362690b83d08b"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,11 +26,11 @@
         },
         "aws-cdk-lib": {
             "hashes": [
-                "sha256:2f6650e8d365fb2b143e65cf22d91de45c090636d8a2f1ac68efc302187780f7",
-                "sha256:80a8eac6dcc2dd38496d9296efb1d90b45051dd1748743555bf69cfe83b1aa0a"
+                "sha256:60a0adaddad146ca682ded4762cb2665b11a095f2d9c2ad84a33ff8f473da161",
+                "sha256:f73174509eb89528a4bcbd50b40dd228120c8bced8089031e72148031ee605a3"
             ],
             "index": "pypi",
-            "version": "==2.110.0"
+            "version": "==2.111.0"
         },
         "aws-cdk.asset-awscli-v1": {
             "hashes": [
@@ -63,6 +63,14 @@
             ],
             "index": "pypi",
             "version": "==2.0.0"
+        },
+        "aws-cdk.lambda-layer-kubectl-v28": {
+            "hashes": [
+                "sha256:93961e17912ddc746bbe20222d57a81c90224088843a426ccbcde3bda539742e",
+                "sha256:dc5c4d2c0f547561e7cb2352a4cbee79871b2635d784d6c5d905914ef2dbcf86"
+            ],
+            "index": "pypi",
+            "version": "==2.1.0"
         },
         "cattrs": {
             "hashes": [

@@ -4,6 +4,8 @@ docs
 helm
 tests
 tmp
+utils
+Makefile
 Dockerfile
 Dockerfile.dev
 Dockerfile.prod
