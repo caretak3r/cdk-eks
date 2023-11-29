@@ -1,9 +1,9 @@
 #!/bin/bash
 
 # Define variables
-HELM_CHART_NAME="capitalone"
-HELM_CHART_VERSION="0.1.31-kubeview"
-ECR_REPO_URL="728168703404.dkr.ecr.us-west-2.amazonaws.com"
+HELM_CHART_NAME=""
+HELM_CHART_VERSION=""
+ECR_REPO_URL=""
 
 # Package the Helm chart
 helm package $HELM_CHART_NAME --version $HELM_CHART_VERSION

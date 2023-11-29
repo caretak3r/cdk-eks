@@ -17,7 +17,7 @@ from aws_cdk import (
 from aws_cdk import (
     aws_logs as logs,
 )
-from aws_cdk.lambda_layer_kubectl_v27 import KubectlV27Layer
+from aws_cdk.lambda_layer_kubectl_v28 import KubectlV28Layer
 from constructs import Construct
 
 import constants
@@ -39,10 +39,13 @@ class EksStack(Stack):
         self.vpc_id = vpc_id
         self.private_subnet_ids = private_subnet_ids
         self.certificate_arn = certificate_arn
-        self.ecr_repo_url = ecr_repo_url
+        # Ensure the input is a URI by stripping 'http://' or 'https://' and any trailing '/'
+        self.ecr_repo_url = (
+            ecr_repo_url.replace("http://", "").replace("https://", "").rstrip("/")
+        )
 
         # This is required to setup the Kubectl + Helm3 layer and gets passed to the eks.FargateCluster construct
-        kubectl_layer = KubectlV27Layer(self, "KubectlV27Layer")
+        kubectl_layer = KubectlV28Layer(self, "KubectlV28Layer")
 
         # We get the VPC type from the provided environment variable
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
@@ -71,7 +74,7 @@ class EksStack(Stack):
                 eks.ClusterLoggingTypes.SCHEDULER,
             ],
             core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS - default
-            endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable public and private access to the cluster endpoint #TODO: test PRIVATE only
+            endpoint_access=eks.EndpointAccess.PRIVATE,  # Enable private access to the cluster endpoint
             kubectl_layer=kubectl_layer,
             # masters_role= Automatically created for us
             output_config_command=True,  # Output the aws eks update-kubeconfig command
@@ -81,7 +84,7 @@ class EksStack(Stack):
             # role=cluster_admin_role,  # Use the cluster admin role created above (Automatically created for you)
             # secrets_encryption_key = eks.SecretsEncryptionKey.KMS,  # Use the default KMS key
             # security_group=cluster_security_group,  # Use the cluster security group created above (Automatically created for you)
-            version=eks.KubernetesVersion.V1_27,
+            version=eks.KubernetesVersion.V1_28,
             vpc=vpc,
             vpc_subnets=[ec2.SubnetSelection(subnets=subnets)],
         )
@@ -145,12 +148,17 @@ class EksStack(Stack):
         # 3. Creates a Helm chart for the AWS Load  Balancer Controller
         add_alb_chart = self.cluster.add_helm_chart(
             "aws-load-balancer-controller",
-            repository=f"oci://{self.ecr_repo_url}",
-            chart="capitalone",
-            version="1.6.2-aws-load-balancer-controller-helm-chart",
+            repository=f"oci://{self.ecr_repo_url}/aws-load-balancer-controller-helm-chart",
+            chart="aws-load-balancer-controller-helm-chart",
+            version="1.6.2",
             release="aws-load-balancer-controller",
             namespace=alb_service_account.service_account_namespace,
             values={
+                "image": {
+                    "repository": f"{self.ecr_repo_url}/aws-load-balancer-controller",
+                    "tag": "v2.6.2",
+                    "pullPolicy": "IfNotPresent",
+                },
                 "clusterName": self.cluster.cluster_name,
                 "serviceAccount": {
                     "create": False,
@@ -165,29 +173,53 @@ class EksStack(Stack):
                 "defaultTargetType": "ip",
             },
         )
+        # add_dependency() method is used to add a dependency on the service_account for the helm_chart.
+        # This means that the service_account will be created before the helm_chart is deployed.
         add_alb_chart.node.add_dependency(alb_service_account)
 
         # Install cert-manager helm chart from ECR private
         # 1. Creates a Helm chart for the cert-manager
         add_cert_manager_chart = self.cluster.add_helm_chart(
             "cert-manager",
-            repository=f"oci://{self.ecr_repo_url}",
-            chart="cert-manager",
-            version="1.13.2-cert-manager-helm-chart",
+            repository=f"oci://{self.ecr_repo_url}/cert-manager-helm-chart",
+            chart="cert-manager-helm-chart",
+            version="v1.13.2",
             release="cert-manager",
             namespace="cert-manager",
             values={
                 "installCRDs": True,
+                "replicaCount": 2,
+                "image": {
+                    "repository": f"{self.ecr_repo_url}/cert-manager-controller",
+                    "tag": "v1.13.2",
+                    "pullPolicy": "IfNotPresent",
+                },
                 "webhook": {
                     "securePort": 10260,  # Fargate requirement
                     "replicaCount": 2,
+                    "image": {
+                        "repository": f"{self.ecr_repo_url}/cert-manager-webhook",
+                        "tag": "v1.13.2",
+                        "pullPolicy": "IfNotPresent",
+                    },
                 },
                 "cainjector": {
                     "enabled": True,
                     "replicaCount": 2,
+                    "image": {
+                        "repository": f"{self.ecr_repo_url}/cert-manager-cainjector",
+                        "tag": "v1.13.2",
+                        "pullPolicy": "IfNotPresent",
+                    },
+                },
+                "acemesolver": {
+                    "enabled": False,
+                },
+                "startupapicheck": {
+                    "enabled": False,
                 },
                 "prometheus": {
-                    "enabled": True,
+                    "enabled": False,
                 },
                 "metrics": {
                     "enabled": False,
