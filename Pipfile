@@ -5,9 +5,9 @@ name = "pypi"
 
 [packages]
 aws-cdk-lib = "*"
-"aws-cdk.lambda-layer-kubectl-v27" = "*"
 constructs = "*"
 python-dotenv = "*"
+"aws-cdk.lambda-layer-kubectl-v28" = "*"
 
 [dev-packages]
 
