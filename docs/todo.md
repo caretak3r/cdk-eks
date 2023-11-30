@@ -39,3 +39,5 @@
 - [ ] Use distroless images
 
 - [ ] Set replicas for pods to 3 for leader election choices, even with 2 subnets
+
+- [ ] generate a unique id, that is used on every cdk invocation that will be used as a tag value for the entire cloudformation stack, and will tag all resources. the unique id will also be used as the folder path in the cdk s3 bucket with all synthesized files and inputs. 
