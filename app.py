@@ -19,23 +19,6 @@ env = {
     )
 }
 
-# env_vars = [
-#     "AWS_VPC_ID",
-#     "AWS_PRIVATE_SUBNET_IDS",
-#     "AWS_ECR_REPO_URL",
-#     "AWS_CERTIFICATE_ARN",
-# ]
-
-# for var in env_vars:
-#     if not os.getenv(var):
-#         print(f"{var} is not set.")
-#         user_input = input(f"Please enter a value for {var}: ")
-#         if user_input:
-#             os.environ[var] = user_input
-#         else:
-#             print(f"{var} is required. Exiting script.")
-#             exit(1)
-
 # Create an EKS Stack with Fargate workers
 eks_stack = EksStack(
     app,
