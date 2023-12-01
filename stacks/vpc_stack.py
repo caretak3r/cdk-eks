@@ -36,7 +36,9 @@ class VpcStack(Stack):
                 )
             },
         )
-        Tags.of(self.vpc).add("Name", f"{constants.STACK_PREFIX}-private-vpc")
+        Tags.of(self.vpc).add(
+            "Name", f"{constants.STACK_PREFIX}-private-vpc-{constants.STACK_AFFIX}"
+        )
 
         # tag all subnets
         selection = self.vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED)
@@ -44,10 +46,11 @@ class VpcStack(Stack):
         for index, subnet in enumerate(selection.subnets, start=1):
             Tags.of(subnet).add("Name", f"{constants.STACK_PREFIX}-isolated{index}")
             Tags.of(subnet).add("kubernetes.io/role/internal-elb", "1")
-            Tags.of(subnet).add(
-                f"kubernetes.io/cluster/{constants.STACK_PREFIX}-eks-cluster",
-                "owned",
-            )
+            # This tag was only used by Amazon EKS. You can remove the tag without impacting your services. It's not used with clusters that are version 1.15 or later.
+            # Tags.of(subnet).add(
+            #     f"kubernetes.io/cluster/{constants.STACK_PREFIX}-eks-cluster",
+            #     "owned",
+            # )
 
         # Add required VPC endpoints
 
