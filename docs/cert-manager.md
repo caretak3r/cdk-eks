@@ -11,3 +11,8 @@ Usage with private ACM CA: https://aws.amazon.com/about-aws/whats-new/2022/01/ac
 ## TLS Encryption 
 
 https://aws.amazon.com/blogs/security/tls-enabled-kubernetes-clusters-with-acm-private-ca-and-amazon-eks-2/
+
+
+## AWS Private CA Issuer
+
+REF: https://github.com/cert-manager/aws-privateca-issuer

@@ -32,3 +32,14 @@ spec:
               serviceName: service-2048
               servicePort: 80
 ```
+
+## On Fargate
+
+The AWS Load Balancer Controller supports the following traffic modes:
+
+Instance – Registers nodes within your cluster as targets for the ALB. Traffic reaching the ALB is routed to NodePort for your service and then proxied to your Pods. This is the default traffic mode. You can also explicitly specify it with the alb.ingress.kubernetes.io/target-type: instance annotation.
+
+Note
+Your Kubernetes service must specify the NodePort or "LoadBalancer" type to use this traffic mode.
+
+IP – Registers Pods as targets for the ALB. Traffic reaching the ALB is directly routed to Pods for your service. You must specify the `alb.ingress.kubernetes.io/target-type: ip` annotation to use this traffic mode. The IP target type is required when target Pods are running on Fargate.
