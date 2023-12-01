@@ -41,3 +41,11 @@
 - [ ] Set replicas for pods to 3 for leader election choices, even with 2 subnets
 
 - [ ] generate a unique id, that is used on every cdk invocation that will be used as a tag value for the entire cloudformation stack, and will tag all resources. the unique id will also be used as the folder path in the cdk s3 bucket with all synthesized files and inputs. 
+
+- [ ] VERIFY: Based on this [doc](https://docs.aws.amazon.com/AmazonECR/latest/userguide/registry_auth.html) ECR tokens are valid for 12 hours. During cdk deployment, we can pull images and deploy them without issue. What happens if the services are defined with `AlwaysPull` and EKS needs to pull an image once in production? 
+    
+    > That works for private ECR in the same account if the AmazonEC2ContainerRegistryReadOnly policy is attached to the worker nodes.
+    > https://stackoverflow.com/questions/54109603/how-to-use-docker-image-in-ecr-with-aws-eks
+    > No Credentials needed. Workergroup role or FargatePod role should already be provisioned with this.
+
+

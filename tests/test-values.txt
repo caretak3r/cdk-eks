@@ -12,12 +12,12 @@ AWS_SESSION_TOKEN=
 
 # AWS Resources (required)
 # Please set this to the name of the ECR repository where images are shared with the respective AWS account.
-AWS_ECR_REPO_URL=728168703404.dkr.ecr.us-west-2.amazonaws.com/capitalone
+AWS_ECR_REPO_URL=728168703404.dkr.ecr.us-west-2.amazonaws.com
 # Please set this to the ARN of the ACM certificate to use for the ALB. 
 AWS_CERTIFICATE_ARN=arn:aws:acm:us-west-2:728168703404:certificate/d1f09e52-6a3f-4ec6-8846-592b168c4ee4
 # Please set this to the ARN for the KMS key to use to encrypt the EKS cluster
 AWS_EKS_KMS_ARN=arn:aws:kms:us-west-2:728168703404:key/450c6d65-d5c6-402b-995a-bd78c993bfbd
 # Please set this to the ID of the VPC where the ALB and ECS cluster will be deployed.
-AWS_VPC_ID=vpc-0285a1462fad4c5f2
+AWS_VPC_ID=vpc-01f9d1ba3e37725e0
 # Please set this as a comma-separated list of subnet IDs, e.g. subnet-12345678,subnet-87654321
-AWS_PRIVATE_SUBNET_IDS=subnet-06e404a7e26a8b850,subnet-0841d51a3b02bf999
+AWS_PRIVATE_SUBNET_IDS=subnet-052c76591d241dee6, subnet-0f79eae162ca82492, subnet-097307ec6cf425cf3, subnet-0ff4c9a8f9525a474
