@@ -49,10 +49,10 @@ class EksStack(Stack):
 
         # We get the VPC type from the provided environment variable
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
-        # TODO: We should tag the VPC and subnets since the customer won't, look at vpc_stack.py
-        # TODO: Please note when using an existing VPC, please make sure its private subnets have been tagged with "kubernetes.io/role/internal-elb: 1"
 
         # We get the subnets type from the provided environment variable
+        # Strip any spaces in private_subnet_ids since it should just be a comma delimited list
+        self.private_subnet_ids = [subnet.strip() for subnet in self.private_subnet_ids]
         subnets = [
             ec2.Subnet.from_subnet_attributes(
                 self, f"Subnet{n}", subnet_id=self.private_subnet_ids[n]
@@ -150,7 +150,7 @@ class EksStack(Stack):
             "aws-load-balancer-controller",
             repository=f"oci://{self.ecr_repo_url}/aws-load-balancer-controller-helm-chart",
             chart="aws-load-balancer-controller-helm-chart",
-            version="1.6.2",
+            version="v1.6.2",
             release="aws-load-balancer-controller",
             namespace=alb_service_account.service_account_namespace,
             values={
@@ -221,11 +221,41 @@ class EksStack(Stack):
                 "prometheus": {
                     "enabled": False,
                 },
-                "metrics": {
-                    "enabled": False,
-                },
             },
         )
+
+        # # Create IAM policy for Fluent Bit
+        # fluent_bit_policy = iam.Policy(
+        #     self,
+        #     "FluentBitPolicy",
+        #     statements=[
+        #         iam.PolicyStatement(
+        #             actions=["logs:CreateLogStream", "logs:PutLogEvents"],
+        #             resources=["*"],
+        #             effect=iam.Effect.ALLOW
+        #         )
+        #     ]
+        # )
+
+        # # Create service account for Fluent Bit
+        # fluent_bit_service_account = eks.ServiceAccount(
+        #     self,
+        #     "FluentBitServiceAccount",
+        #     cluster=self.cluster,
+        #     name="fluent-bit",
+        #     namespace="logging",
+        #     policies=[fluent_bit_policy]
+        # )
+
+        # # Deploy Fluent Bit manifest
+        # fluent_bit_manifest = eks.KubernetesManifest(
+        #     self,
+        #     "FluentBitManifest",
+        #     cluster=self.cluster,
+        #     manifest=[
+        #         # The Fluent Bit ConfigMap, ServiceAccount, DaemonSet, etc. go here
+        #     ]
+        # )
 
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "AWS REGION", value=self.region)
