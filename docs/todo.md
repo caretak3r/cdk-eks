@@ -49,3 +49,16 @@
     > No Credentials needed. Workergroup role or FargatePod role should already be provisioned with this.
 
 
+- [ ] Encrypt EKS cluster with provided KMS
+
+- [ ] Encrypt all infra with provided KMS
+
+- [ ] Associate ACM certificate to ALB controller 
+
+- [ ] Fix the pod names, maybe remove the release name from the `add_helm_chart()`
+
+    ```
+    aws-load-balancer-controller-aws-load-balancer-controller-lnk2l   1/1     Running   0          7h40m
+    aws-load-balancer-controller-aws-load-balancer-controller-wsw2b   1/1     Running   0          7h40m
+    ```
+- Update any IAM policies to restrict access on conditions to specific resources the stack creates. 
