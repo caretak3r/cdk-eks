@@ -95,12 +95,14 @@ To create the necessary VPC endpoints for a fully private EKS, follow the steps 
       | Elastic Load Balancing | com.amazonaws.region.elasticloadbalancing |
       | SSM | com.amazonaws.region.ssm |
       | EKS | com.amazonaws.region.eks |
-      | CloudWatch Logs | com.amazonaws.region.logs |
       | Lambda | com.amazonaws.region.lambda |
       | Step Functions | com.amazonaws.region.states |
       | Sync States | com.amazonaws.region.sync-states |
       | CloudFormation | com.amazonaws.region.cloudformation |
       | S3 | com.amazonaws.region.s3 |
+      | CloudWatch | com.amazonaws.region.cloudformation	|
+      | CloudWatch Logs | com.amazonaws.region.logs |
+      | CloudWatch Events | com.amazonaws.region.events |
 
    3. For each service, follow these steps:
       1. Navigate to the VPC Dashboard in the AWS Management Console.
