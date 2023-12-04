@@ -39,6 +39,6 @@ d-deploy:
 	docker run -v ${HOME}/.aws:/home/cdk/.aws --env-file .env -it tkp-cdk-dev cdk deploy --require-approval=never --no-previous-parameters
 
 deploy:
-	cdk deploy --require-approval=never --no-previous-parameters --no-rollback --verbose >> deploy.log 2>&1
+	cdk deploy EksStack --require-approval=never --no-previous-parameters --no-rollback --verbose 
 
 .PHONY: builds shell bootstrap synth deploy
