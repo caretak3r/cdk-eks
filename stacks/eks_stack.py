@@ -302,14 +302,42 @@ class EksStack(Stack):
             values={
                 "image": {
                     "repository": f"{self.ecr_repo_url}/http-echo",
-                    "tag": "1.0.0",
+                    "tag": "v1.0.0",
                     "pullPolicy": "IfNotPresent",
                 },
                 "serviceAccount": {"create": False},
-                "service": {
-                    "type": "LoadBalancer",
-                    "port": 80,
-                    "targetPort": 8080,
+                "securityContext": {
+                    "allowPrivilegeEscalation": False,
+                    "readOnlyRootFilesystem": True,
+                    "runAsNonRoot": True,
+                },
+                "ingress": {
+                    "enabled": True,
+                    "annotations": {
+                        "kubernetes.io/ingress.class": "alb",
+                        "alb.ingress.kubernetes.io/scheme": "internal",
+                        "alb.ingress.kubernetes.io/target-type": "ip",
+                        "alb.ingress.kubernetes.io/listen-ports": '[{"HTTP": 80}]',
+                        "alb.ingress.kubernetes.io/actions.ssl-redirect": (
+                            '{"Type": "redirect", "RedirectConfig": {"Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+                        ),
+                        "alb.ingress.kubernetes.io/certificate-arn": self.certificate_arn,
+                    },
+                    "hosts": [
+                        {
+                            "host": "http-echo.tkp.internal",
+                            "paths": [
+                                {
+                                    "path": "/echo",
+                                    "pathType": "Exact",
+                                    "backend": {
+                                        "serviceName": "http-echo",
+                                        "servicePort": 5678,
+                                    },
+                                }
+                            ],
+                        }
+                    ],
                 },
             },
         )
