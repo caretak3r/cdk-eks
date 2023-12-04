@@ -1,3 +1,5 @@
+
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -47,3 +49,33 @@ spec:
       port: 80
       targetPort: app-port
       protocol: TCP
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ${NS}-ingress
+  namespace: ${NS}
+  annotations:
+    alb.ingress.kubernetes.io/load-balancer-name: ${NS}-ingress
+    alb.ingress.kubernetes.io/target-type: ip
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/healthcheck-path: /healthz
+spec:
+  ingressClassName: alb
+  rules:
+    - http:
+        paths:
+          - path: /first
+            pathType: Prefix
+            backend:
+              service:
+                name: first
+                port:
+                  name: svc-port
+          - path: /second
+            pathType: Prefix
+            backend:
+              service:
+                name: second
+                port:
+                  name: svc-port
