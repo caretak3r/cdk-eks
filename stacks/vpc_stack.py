@@ -133,6 +133,14 @@ class VpcStack(Stack):
             subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
         )
 
+        # CloudWatch Interface Endpoints
+        self.vpc.add_interface_endpoint(
+            "CloudWatchEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
+
         # CloudWatch Logs Interface Endpoints
         self.vpc.add_interface_endpoint(
             "CloudWatchLogsEndpoint",
@@ -145,6 +153,14 @@ class VpcStack(Stack):
         self.vpc.add_interface_endpoint(
             "CloudWatchEventsEndpoint",
             service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
+
+        # CloudFormation Interface Endpoints
+        self.vpc.add_interface_endpoint(
+            "CloudFormationEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.CLOUDFORMATION,
             private_dns_enabled=True,
             subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
         )

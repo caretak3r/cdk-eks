@@ -62,3 +62,6 @@
     aws-load-balancer-controller-aws-load-balancer-controller-wsw2b   1/1     Running   0          7h40m
     ```
 - Update any IAM policies to restrict access on conditions to specific resources the stack creates. 
+
+- [ ] Final account to share images with a customer from, need lead time. 
+
