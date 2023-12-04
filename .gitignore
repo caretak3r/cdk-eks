@@ -15,6 +15,5 @@ cdk.context.json
 *.log
 .envhelm/ingress-nginx
 helm/nginx
-helm/http-echo
 helm/ingress-nginx*
 .env
