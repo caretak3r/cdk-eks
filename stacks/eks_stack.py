@@ -293,9 +293,26 @@ class EksStack(Stack):
         # -------------------------------------------------------------------------------------------------------------
         # Install http-echo helm chart from ECR private
         # 1. Creates a Helm chart for the http-echo
-        # http_echo_k8s_manifest = self.cluster.add_manifest(
-
-        # )
+        http_echo_k8s_manifest = self.cluster.add_helm_chart(
+            "http-echo",
+            repository=f"oci://{self.ecr_repo_url}/http-echo-helm-chart",
+            chart="http-echo-helm-chart",
+            version="v1.0.0",
+            namespace="app",
+            values={
+                "image": {
+                    "repository": f"{self.ecr_repo_url}/http-echo",
+                    "tag": "1.0.0",
+                    "pullPolicy": "IfNotPresent",
+                },
+                "serviceAccount": {"create": False},
+                "service": {
+                    "type": "LoadBalancer",
+                    "port": 80,
+                    "targetPort": 8080,
+                },
+            },
+        )
 
         # -------------------------------------------------------------------------------------------------------------
         # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
