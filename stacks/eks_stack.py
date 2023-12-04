@@ -1,7 +1,7 @@
 import json
 import os
 
-from aws_cdk import Aws, CfnOutput, Fn, Stack, Tags
+from aws_cdk import Aws, CfnOutput, Fn, Stack, Tags, RemovalPolicy
 from aws_cdk import (
     aws_ec2 as ec2,
 )
@@ -16,6 +16,9 @@ from aws_cdk import (
 )
 from aws_cdk import (
     aws_logs as logs,
+)
+from aws_cdk import (
+    aws_kms as kms,
 )
 from aws_cdk.lambda_layer_kubectl_v28 import KubectlV28Layer
 from constructs import Construct
@@ -32,10 +35,14 @@ class EksStack(Stack):
         private_subnet_ids,
         certificate_arn,
         ecr_repo_url,
+        customer_managed_key_arn=None,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # -------------------------------------------------------------------------------------------------------------
+        # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
         self.vpc_id = vpc_id
         self.private_subnet_ids = private_subnet_ids
         self.certificate_arn = certificate_arn
@@ -44,8 +51,19 @@ class EksStack(Stack):
             ecr_repo_url.replace("http://", "").replace("https://", "").rstrip("/")
         )
 
-        # This is required to setup the Kubectl + Helm3 layer and gets passed to the eks.FargateCluster construct
-        kubectl_layer = KubectlV28Layer(self, "KubectlV28Layer")
+        # If a customer_managed_key_arn is not provided or not valid, then create one
+        if not customer_managed_key_arn:
+            self.kms_key = kms.Key(
+                self,
+                "KmsKey",
+                removal_policy=RemovalPolicy.DESTROY,
+                description="KMS key for EKS encryption",
+                alias=f"alias/{constants.STACK_PREFIX}-kms-key",
+                enabled=True,
+                enable_key_rotation=True,
+            )
+            customer_managed_key_arn = self.kms_key.key_arn
+        self.customer_managed_key_arn = customer_managed_key_arn
 
         # We get the VPC type from the provided environment variable
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
@@ -61,6 +79,12 @@ class EksStack(Stack):
         ]
         # acknowledge warning: https://github.com/aws/aws-cdk/pull/3171
 
+        # -------------------------------------------------------------------------------------------------------------
+        # CLUSTER CREATION --------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        # This is required to setup the Kubectl + Helm3 layer and gets passed to the eks.FargateCluster construct
+        kubectl_layer = KubectlV28Layer(self, "KubectlV28Layer")
+
         # Create a Fargate EKS cluster in the VPC from the VPC Stack
         self.cluster = eks.FargateCluster(
             self,
@@ -74,7 +98,7 @@ class EksStack(Stack):
                 eks.ClusterLoggingTypes.SCHEDULER,
             ],
             core_dns_compute_type=eks.CoreDnsComputeType.FARGATE,  # Use Fargate for CoreDNS - default
-            endpoint_access=eks.EndpointAccess.PRIVATE,  # Enable private access to the cluster endpoint
+            endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable private access to the cluster endpoint
             kubectl_layer=kubectl_layer,
             # masters_role= Automatically created for us
             output_config_command=True,  # Output the aws eks update-kubeconfig command
@@ -124,6 +148,9 @@ class EksStack(Stack):
                 },
             )
 
+        # -------------------------------------------------------------------------------------------------------------
+        # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
         # Install AWS Load Balancer Controller since we can't use the eks.Cluster construct's alb_controller option
         # since it needs the internet to download. We source from ECR private instead.
 
@@ -177,52 +204,56 @@ class EksStack(Stack):
         # This means that the service_account will be created before the helm_chart is deployed.
         add_alb_chart.node.add_dependency(alb_service_account)
 
+        # FIXME: not sure if this needs to go before ALB or after
+        # -------------------------------------------------------------------------------------------------------------
+        # HELM CHART INSTALL: cert-manager ----------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
         # Install cert-manager helm chart from ECR private
         # 1. Creates a Helm chart for the cert-manager
-        add_cert_manager_chart = self.cluster.add_helm_chart(
-            "cert-manager",
-            repository=f"oci://{self.ecr_repo_url}/cert-manager-helm-chart",
-            chart="cert-manager-helm-chart",
-            version="v1.13.2",
-            release="cert-manager",
-            namespace="cert-manager",
-            values={
-                "installCRDs": True,
-                "replicaCount": 2,
-                "image": {
-                    "repository": f"{self.ecr_repo_url}/cert-manager-controller",
-                    "tag": "v1.13.2",
-                    "pullPolicy": "IfNotPresent",
-                },
-                "webhook": {
-                    "securePort": 10260,  # Fargate requirement
-                    "replicaCount": 2,
-                    "image": {
-                        "repository": f"{self.ecr_repo_url}/cert-manager-webhook",
-                        "tag": "v1.13.2",
-                        "pullPolicy": "IfNotPresent",
-                    },
-                },
-                "cainjector": {
-                    "enabled": True,
-                    "replicaCount": 2,
-                    "image": {
-                        "repository": f"{self.ecr_repo_url}/cert-manager-cainjector",
-                        "tag": "v1.13.2",
-                        "pullPolicy": "IfNotPresent",
-                    },
-                },
-                "acemesolver": {
-                    "enabled": False,
-                },
-                "startupapicheck": {
-                    "enabled": False,
-                },
-                "prometheus": {
-                    "enabled": False,
-                },
-            },
-        )
+        # add_cert_manager_chart = self.cluster.add_helm_chart(
+        #     "cert-manager",
+        #     repository=f"oci://{self.ecr_repo_url}/cert-manager-helm-chart",
+        #     chart="cert-manager-helm-chart",
+        #     version="v1.13.2",
+        #     release="cert-manager",
+        #     namespace="cert-manager",
+        #     values={
+        #         "installCRDs": True,
+        #         "replicaCount": 2,
+        #         "image": {
+        #             "repository": f"{self.ecr_repo_url}/cert-manager-controller",
+        #             "tag": "v1.13.2",
+        #             "pullPolicy": "IfNotPresent",
+        #         },
+        #         "webhook": {
+        #             "securePort": 10260,  # Fargate requirement
+        #             "replicaCount": 2,
+        #             "image": {
+        #                 "repository": f"{self.ecr_repo_url}/cert-manager-webhook",
+        #                 "tag": "v1.13.2",
+        #                 "pullPolicy": "IfNotPresent",
+        #             },
+        #         },
+        #         "cainjector": {
+        #             "enabled": True,
+        #             "replicaCount": 2,
+        #             "image": {
+        #                 "repository": f"{self.ecr_repo_url}/cert-manager-cainjector",
+        #                 "tag": "v1.13.2",
+        #                 "pullPolicy": "IfNotPresent",
+        #             },
+        #         },
+        #         "acemesolver": {
+        #             "enabled": False,
+        #         },
+        #         "startupapicheck": {
+        #             "enabled": False,
+        #         },
+        #         "prometheus": {
+        #             "enabled": False,
+        #         },
+        #     },
+        # )
 
         # # Create IAM policy for Fluent Bit
         # fluent_bit_policy = iam.Policy(
@@ -257,6 +288,18 @@ class EksStack(Stack):
         #     ]
         # )
 
+        # -------------------------------------------------------------------------------------------------------------
+        # HELM CHART INSTALL: http-echo -------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        # Install http-echo helm chart from ECR private
+        # 1. Creates a Helm chart for the http-echo
+        # http_echo_k8s_manifest = self.cluster.add_manifest(
+
+        # )
+
+        # -------------------------------------------------------------------------------------------------------------
+        # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "AWS REGION", value=self.region)
         CfnOutput(self, "AWS ACCOUNT ID", value=self.account)
@@ -267,8 +310,24 @@ class EksStack(Stack):
         CfnOutput(self, "Subnet-Ids", value=Fn.join(",", private_subnet_ids))
         CfnOutput(self, "CertificateArn", value=self.certificate_arn)
         CfnOutput(self, "ECRRepoURL", value=self.ecr_repo_url)
+        CfnOutput(self, "CustomerManagedKeyArn", value=self.customer_managed_key_arn)
         CfnOutput(
             self,
             "ALBServiceAccountName",
             value=alb_service_account.service_account_name,
         )
+        CfnOutput(
+            self,
+            "ALBServiceAccountNamespace",
+            value=alb_service_account.service_account_namespace,
+        )
+        # CfnOutput(
+        #     self,
+        #     "ALBIngressAddressRGUDI",
+        #     value=self.cluster.get_ingress_load_balancer_address(
+        #         ingress_name="alb", namespace="kube-system"
+        #     ),
+        # )
+
+        # Change the endpoint for the created EKS cluster to PRIVATE
+        self.cluster.cluster_endpoint_access = eks.EndpointAccess.PRIVATE

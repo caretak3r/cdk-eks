@@ -13,4 +13,8 @@ cdk.context.json
 *.tgz
 .env-customer
 *.log
+.envhelm/ingress-nginx
+helm/nginx
+helm/http-echo
+helm/ingress-nginx*
 .env
