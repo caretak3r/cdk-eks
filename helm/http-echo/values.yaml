@@ -41,7 +41,7 @@ securityContext: {}
 
 service:
   type: ClusterIP
-  port: 3000
+  port: 5678
 
 ingress:
   enabled: false
@@ -67,9 +67,9 @@ resources: {}
   # limits:
   #   cpu: 100m
   #   memory: 128Mi
-  requests:
-    cpu: 0.125
-    memory: 50Mi
+  # requests:
+  #   cpu: 0.125
+  #   memory: 50Mi
 
 autoscaling:
   enabled: false
