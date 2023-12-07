@@ -46,7 +46,7 @@ class RdsStack(Stack):
             peer=ec2.Peer.ipv4(
                 vpc.vpc_cidr_block
             ),  # allows ingress from VPC CIDR ranges
-            connection=ec2.Port.tcp(5432),  # default postgres port
+            connection=ec2.Port.tcp(5432),  # default postgres port 5432
             description="INGRESS Private communication between RDS and EKS",
         )
 
@@ -61,7 +61,7 @@ class RdsStack(Stack):
             self,
             "AuroraCluster",
             engine=rds.DatabaseClusterEngine.aurora_postgres(
-                version=rds.AuroraPostgresEngineVersion.VER_15_3
+                version=rds.AuroraPostgresEngineVersion.VER_14_6
             ),
             cluster_identifier=f"{constants.STACK_PREFIX}-aurora-cluster",
             cloudwatch_logs_exports=["postgresql"],
@@ -72,7 +72,7 @@ class RdsStack(Stack):
             parameter_group=rds.ParameterGroup.from_parameter_group_name(
                 self,
                 "ParameterGroup",
-                parameter_group_name="default.aurora-postgresql15",
+                parameter_group_name="default.aurora-postgresql14",
             ),
             # preferred_maintenance_window=  30-minute window selected at random from an 8-hour block of time for each AWS Region, occurring on a random day of the week. #TODO set this
             removal_policy=RemovalPolicy.SNAPSHOT,  # takes a snapshot before removal
@@ -105,11 +105,30 @@ class RdsStack(Stack):
                 rds.ClusterInstance.provisioned(
                     "reader",
                     instance_type=ec2.InstanceType.of(
-                        ec2.InstanceClass.M5, ec2.InstanceSize.XLARGE
+                        ec2.InstanceClass.M5, ec2.InstanceSize.LARGE
                     ),
                 )
             ],
-            storage_type=rds.DBClusterStorageType.AURORA_IOPT1,
+            storage_type=rds.DBClusterStorageType.AURORA,
+        )
+
+        # service principal
+        auth_role = iam.Role(
+            self,
+            "RdsAuthRole",
+            assumed_by=iam.ServicePrincipal("eks.amazonaws.com"),
+            description="Role for RDS IAM Authentication",
+            role_name=f"{constants.STACK_PREFIX}-rds-auth-role",
+        )
+
+        auth_role.add_to_policy(
+            iam.PolicyStatement(
+                actions=["rds-db:connect"],
+                resources=[
+                    f"arn:aws:rds-db:{self.cluster.cluster_resource_identifier}"
+                ],
+                effect=iam.Effect.ALLOW,
+            )
         )
 
         # TODO: ensure backup policy via AWS Backup is in place or upload backups to s3 with minimal retention
@@ -122,4 +141,24 @@ class RdsStack(Stack):
             retention=logs.RetentionDays.ONE_MONTH,
             log_group_name=f"{constants.STACK_PREFIX}-rds-cluster-log-group",
             removal_policy=RemovalPolicy.DESTROY,
+        )
+
+        CfnOutput(
+            self,
+            "RdsClusterIdentifier",
+            value=self.cluster.cluster_identifier,
+            description="RDS Cluster Identifier",
+            export_name="RdsClusterIdentifier",
+        )
+        CfnOutput(
+            self,
+            "RdsClusterResourceIdentifier",
+            value=self.cluster.cluster_resource_identifier,
+            description="RDS Cluster Resource Identifier",
+        )
+        CfnOutput(
+            self,
+            "RdsClusterEndpoint",
+            value=self.cluster.cluster_endpoint.hostname,
+            description="RDS Cluster Endpoint",
         )
