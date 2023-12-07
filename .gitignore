@@ -17,3 +17,5 @@ cdk.context.json
 helm/nginx
 helm/ingress-nginx*
 .env
+helm/docker-http-https-echo
+helm/aws-privateca-issuer

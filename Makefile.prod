@@ -5,10 +5,7 @@ ifneq (,$(wildcard ./.env))
 endif
 
 bootstrap:
-	cdk bootstrap --toolkit-stack-name tkp-cdk-toolkit
-
-synth:
-	cdk synth
+	cdk bootstrap --termination-protection=true --toolkit-stack-name tkp-cdk-toolkit --qualifier c1 --tags "managed_by=c1-tkp-cdk"
 
 deploy:
 	cdk deploy --require-approval=never --no-previous-parameters

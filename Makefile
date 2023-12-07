@@ -17,28 +17,15 @@ dev:
 shell:
 	docker run -v ${HOME}/.aws:/home/cdk/.aws -v ${PWD}:/app --env-file .env -it tkp-cdk-dev /bin/sh
 
-# d-bootstrap: this runs the cdk bootstrap command - no shell required just use the existing container to run the command
-d-bootstrap:
-	docker run -v ${HOME}/.aws:/home/cdk/.aws --env-file .env -it tkp-cdk-dev cdk bootstrap
-
 # bootstrap: this runs the cdk bootstrap command within the container
-#TODO: add termination protection and tags to the bootstrap command (already a default)
-#TODO: add tags to stack
 bootstrap:
-	cdk bootstrap --toolkit-stack-name tkp-cdk-dev-toolkit
-
-# d-synth: this runs the cdk synth command from the host
-d-synth:
-	docker run -v ${HOME}/.aws:/home/cdk/.aws --env-file .env -it tkp-cdk-dev cdk synth
+	cdk bootstrap --termination-protection=true --toolkit-stack-name tkp-cdk-toolkit --qualifier c1 --tags "managed_by=c1-tkp-cdk" --debug --verbose
 
 synth:
 	cdk synth
 
 # deploy: this runs the cdk deploy command
-d-deploy:
-	docker run -v ${HOME}/.aws:/home/cdk/.aws --env-file .env -it tkp-cdk-dev cdk deploy --require-approval=never --no-previous-parameters
-
 deploy:
-	cdk deploy EksStack --require-approval=never --no-previous-parameters --no-rollback --verbose 
+	cdk deploy VpcStack --require-approval=never --no-previous-parameters --no-rollback --verbose --debug
 
 .PHONY: builds shell bootstrap synth deploy

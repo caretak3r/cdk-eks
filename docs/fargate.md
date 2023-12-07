@@ -1,5 +1,13 @@
 # Fargate
 
+AWS Fargate Considerations [REF](https://docs.aws.amazon.com/eks/latest/userguide/fargate.html)
+
+## Control 
+
+Fargate gives you less control in various ways. Not only do you not control cluster sizing, but you also can’t specify configuration variables like HostPort and HostNetwork for containers running in Fargate mode. You also can’t run containers in privileged mode, and you can’t configure DaemonSets.
+
+---
+
 ## Considerations
 
 1. cert-manager 
@@ -8,6 +16,11 @@
 4. Daemonsets
 5. kube-proxy
 6. secrets-operator
+7. vpc-cni
+8. affinity/anti-affinity
+9. privileges 
+10. pods on fargate networking requirements
+11. DNS 
 ---
 
 1. Using cert-manager with fargate will work, so long as the webhook port is not using 10250, since kubelet listens on this. Change it to 10260. 
@@ -25,3 +38,13 @@
 6. EKS on Fargate support for external-secrets operator [here](https://aws.amazon.com/blogs/containers/leverage-aws-secrets-stores-from-eks-fargate-with-external-secrets-operator/)
 
 ![Alt text](image-3.png)
+
+7. VPC CNI is installed on Fargate Nodes by default, and handled by the control plane. 
+
+8. Kubernetes affinity/anti-affinity rules do not apply and aren't necessary with Amazon EKS Fargate Pods.
+
+9. Privileged containers aren't supported on Fargate.
+
+10. Pods that run on Fargate are only supported on private subnets (with NAT gateway access to AWS services, but not a direct route to an Internet Gateway), so your cluster's VPC must have private subnets available. For clusters without outbound internet access, see Private cluster requirements.
+
+11. DNS resolution and DNS hostnames must be enabled for your VPC. For more information, see Viewing and updating DNS support for your VPC.

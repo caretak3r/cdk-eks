@@ -1,26 +1,13 @@
-from aws_cdk import App, Environment, Tags
+from aws_cdk import App, Environment, Tags, Stack
 from stacks.eks_stack import EksStack
 from stacks.vpc_stack import VpcStack
 import constants
 import os
 from dotenv import load_dotenv
-import uuid
-import hashlib
+from lib.uuid import generate_uuid
 
 # loads environment variables from .env file
 load_dotenv()
-
-
-def generate_uuid():
-    try:
-        uuid_value = uuid.uuid4()
-        assert uuid.UUID(str(uuid_value), version=4)
-    except ValueError:
-        uuid_value = hashlib.md5(str(uuid.uuid4()).encode()).hexdigest()
-    return uuid_value
-
-
-print(f"Unique ID for this deployment run: {generate_uuid()}")
 
 # initialize app
 app = App()
@@ -41,8 +28,11 @@ vpc_stack = VpcStack(
     **env,
 )
 
+print(f"stack template file: {vpc_stack.template_file}")
+
 Tags.of(vpc_stack).add("managed_by", "c1-tkp-cdk")
 Tags.of(vpc_stack).add("env", f"{constants.STACK_STAGE}")
+Tags.of(vpc_stack).add("deployment_id", f"{generate_uuid()}")
 
 # TODO: add tags for uuid
 # TODO: add tags for entity tag?
@@ -61,6 +51,7 @@ eks_stack = EksStack(
 
 Tags.of(eks_stack).add("managed_by", "c1-tkp-cdk")
 Tags.of(eks_stack).add("env", f"{constants.STACK_STAGE}")
+Tags.of(eks_stack).add("deployment_id", f"{generate_uuid()}")
 
 # app.synth()
 app.synth(validate_on_synthesis=True, force=True)
