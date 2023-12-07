@@ -65,3 +65,10 @@
 
 - [ ] Final account to share images with a customer from, need lead time. 
 
+- [ ] Vertical and Horizontal scaling 
+
+- [ ] Pod disruption budgets set to minimize disruption during OS patching by AWS 
+
+- [ ] Provide a bootstrap template, to minimize resources that are created, do we even need the ECR repo created from bootstrap? 
+
+- [ ] 
