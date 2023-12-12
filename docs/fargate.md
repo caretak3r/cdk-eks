@@ -20,7 +20,8 @@ Fargate gives you less control in various ways. Not only do you not control clus
 8. affinity/anti-affinity
 9. privileges 
 10. pods on fargate networking requirements
-11. DNS 
+11. DNS
+12. EFS
 ---
 
 1. Using cert-manager with fargate will work, so long as the webhook port is not using 10250, since kubelet listens on this. Change it to 10260. 
@@ -48,3 +49,5 @@ Fargate gives you less control in various ways. Not only do you not control clus
 10. Pods that run on Fargate are only supported on private subnets (with NAT gateway access to AWS services, but not a direct route to an Internet Gateway), so your cluster's VPC must have private subnets available. For clusters without outbound internet access, see Private cluster requirements.
 
 11. DNS resolution and DNS hostnames must be enabled for your VPC. For more information, see Viewing and updating DNS support for your VPC.
+
+12. 

@@ -2,3 +2,6 @@
 
 In conjunction with cert-manager, the [aws-privateca-issuer](https://github.com/cert-manager/aws-privateca-issuer/tree/main) manages and sets up the capability of managing private CAs and well as issue private certificates. 
 
+It requires that cert-manager is installed first. 
+
+We will want to use `AWSPCAClusterIssuer` vs `AWSPCAIssuer`. This CR is identical to the AWSPCAIssuer. The only difference being that it's not namespaced and can be referenced from anywhere.

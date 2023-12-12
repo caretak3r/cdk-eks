@@ -1,43 +1,86 @@
-from aws_cdk import App, Environment, Tags, Stack
-from stacks.eks_stack import EksStack
-from stacks.vpc_stack import VpcStack
-import constants
 import os
 from dotenv import load_dotenv
-from lib.uuid import generate_uuid
+from aws_cdk import App, Environment
+import lib.constants as constants
+
+# from stacks.vpc_stack import VpcStack
+from stacks.base_stack import BaseStack
+from stacks.eks_stack import EksStack
+# from stacks.rds_stack import RdsStack
+# from stacks.efs_stack import EfsStack
+# TODO: use tag_stacks.py to tag stacks with default tags (managed_by, env, deployment_id)
 
 # loads environment variables from .env file
-load_dotenv()
+load_dotenv(verbose=True, dotenv_path=".env", override=True)
 
 # initialize app
 app = App()
 
-# TODO: these should match what is in the .env file
+# get environment variables from the user input (.env file)
+# If you don't specify 'env', this stack will be environment-agnostic.
+# Account/Region-dependent features and context lookups will not work,
+# but a single synthesized template can be deployed anywhere.
 env = {
     "env": Environment(
-        # profile=os.getenv("AWS_PROFILE", "default"),
-        account=os.getenv("AWS_ACCOUNT_ID", ""),
-        region=os.getenv("AWS_REGION"),
+        account=os.getenv("AWS_ACCOUNT_ID"), region=os.getenv("AWS_REGION")
     )
 }
 
-vpc_stack = VpcStack(
+# -------------------
+# Create a VPC Stack
+# -------------------
+# If a user wants to deploy a VPC stack, create a VPC stack
+# Else, use the VPC ID from the environment variables
+# and validate those inputs against the user's AWS Account
+# vpc_stack = VpcStack(
+#     app,
+#     "VpcStack",
+#     stack_name=f"{constants.STACK_PREFIX}-vpc-stack-{constants.STACK_AFFIX}",
+#     **env,
+# )
+
+# --------------------
+# Create Base Stack
+# --------------------
+# This will provision an S3 bucket and a CMK key.
+base_stack = BaseStack(
     app,
-    "VpcStack",
-    stack_name=f"{constants.STACK_PREFIX}-vpc-stack-{constants.STACK_AFFIX}",
+    "BaseStack",
+    stack_name=f"{constants.STACK_PREFIX}-base-stack-{constants.STACK_AFFIX}",
+    vpc_id=os.getenv("AWS_VPC_ID"),
+    private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
     **env,
 )
 
-print(f"stack template file: {vpc_stack.template_file}")
+# ------------------------
+# Create RDS Aurora Stack
+# ------------------------
+# This will provision an Postgres Aurora Cluster and a CMK key.
+# rds_stack = RdsStack(
+#     app,
+#     "RdsStack",
+#     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_AFFIX}",
+#     vpc_id=os.getenv("AWS_VPC_ID"),
+#     private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
+#     **env,
+# )
 
-Tags.of(vpc_stack).add("managed_by", "c1-tkp-cdk")
-Tags.of(vpc_stack).add("env", f"{constants.STACK_STAGE}")
-Tags.of(vpc_stack).add("deployment_id", f"{generate_uuid()}")
+# --------------------
+# Create EFS Stack
+# --------------------
+# This will provision an EFS and a CMK key.
+# efs_stack = EfsStack(
+#     app,
+#     "EfsStack",
+#     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_AFFIX}",
+#     vpc_id=os.getenv("AWS_VPC_ID"),
+#     private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
+#     **env,
+# )
 
-# TODO: add tags for uuid
-# TODO: add tags for entity tag?
-
-# Create an EKS Stack with Fargate workers
+# --------------------
+# Create an EKS Stack
+# --------------------
 eks_stack = EksStack(
     app,
     "EksStack",
@@ -49,9 +92,8 @@ eks_stack = EksStack(
     **env,
 )
 
-Tags.of(eks_stack).add("managed_by", "c1-tkp-cdk")
-Tags.of(eks_stack).add("env", f"{constants.STACK_STAGE}")
-Tags.of(eks_stack).add("deployment_id", f"{generate_uuid()}")
-
+# ---------------------
+# Synthesize the stacks
+# ---------------------
 # app.synth()
 app.synth(validate_on_synthesis=True, force=True)
