@@ -1,8 +1,7 @@
 from constructs import Construct
 from aws_cdk import Stack, Tags, CfnOutput
 from aws_cdk import aws_ec2 as ec2
-import constants
-from typing import List
+from lib import constants
 
 
 class VpcStack(Stack):
@@ -53,6 +52,14 @@ class VpcStack(Stack):
             # )
 
         # Add required VPC endpoints
+
+        # Lambda Interface Endpoint
+        self.vpc.add_interface_endpoint(
+            "EFSInterfaceEndpoint",
+            service=ec2.InterfaceVpcEndpointAwsService.ELASTIC_FILESYSTEM,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
 
         # Lambda Interface Endpoint
         self.vpc.add_interface_endpoint(
@@ -175,7 +182,3 @@ class VpcStack(Stack):
             "VpcIsolatedSubnetIds",
             value=", ".join([subnet.subnet_id for subnet in selection.subnets]),
         )
-
-    @property
-    def get_vpc(self) -> ec2.Vpc:
-        return self.vpc
