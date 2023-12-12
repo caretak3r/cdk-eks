@@ -1,29 +1,22 @@
 import json
 import os
-
-from aws_cdk import Aws, CfnOutput, Fn, Stack, Tags, RemovalPolicy
+from lib import constants
 from aws_cdk import (
+    Aws,
+    CfnOutput,
+    Fn,
+    Stack,
+    Tags,
+    RemovalPolicy,
     aws_ec2 as ec2,
-)
-from aws_cdk import (
     aws_ecr as ecr,
-)
-from aws_cdk import (
     aws_eks as eks,
-)
-from aws_cdk import (
     aws_iam as iam,
-)
-from aws_cdk import (
     aws_logs as logs,
-)
-from aws_cdk import (
     aws_kms as kms,
 )
 from aws_cdk.lambda_layer_kubectl_v28 import KubectlV28Layer
 from constructs import Construct
-
-import constants
 
 
 class EksStack(Stack):
@@ -35,7 +28,6 @@ class EksStack(Stack):
         private_subnet_ids,
         certificate_arn,
         ecr_repo_url,
-        customer_managed_key_arn=None,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -50,20 +42,6 @@ class EksStack(Stack):
         self.ecr_repo_url = (
             ecr_repo_url.replace("http://", "").replace("https://", "").rstrip("/")
         )
-
-        # If a customer_managed_key_arn is not provided or not valid, then create one
-        if not customer_managed_key_arn:
-            self.kms_key = kms.Key(
-                self,
-                "KmsKey",
-                removal_policy=RemovalPolicy.DESTROY,
-                description="KMS key for EKS encryption",
-                alias=f"alias/{constants.STACK_PREFIX}-kms-key",
-                enabled=True,
-                enable_key_rotation=True,
-            )
-            customer_managed_key_arn = self.kms_key.key_arn
-        self.customer_managed_key_arn = customer_managed_key_arn
 
         # We get the VPC type from the provided environment variable
         vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
@@ -117,36 +95,7 @@ class EksStack(Stack):
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
 
-        # IAM: Add IAM roles from constants to the `system:masters` group
-        # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
-        # FIXME: this runs successfully the first time, but fails on subsequent runs - kubectl apply AlreadyExists error
-        for role in constants.AUTHORIZED_ROLE_LIST:
-            auth_role = iam.Role.from_role_arn(
-                self, f"ImportedIAMRole{role.split('/')[-1]}", role
-            )
-            # self.cluster.aws_auth.add_role_mapping(auth_role, groups=["system:masters"])
-            self.cluster.aws_auth.add_masters_role(auth_role)
-
-            self.cluster.add_manifest(
-                f"AdminRoleManifest{role.split('/')[-1]}",
-                {
-                    "apiVersion": "rbac.authorization.k8s.io/v1",
-                    "kind": "ClusterRoleBinding",
-                    "metadata": {"name": "admin-role-binding"},
-                    "roleRef": {
-                        "apiGroup": "rbac.authorization.k8s.io",
-                        "kind": "ClusterRole",
-                        "name": "cluster-admin",
-                    },
-                    "subjects": [
-                        {
-                            "kind": "ServiceAccount",
-                            "name": auth_role.role_name,
-                            "namespace": "kube-system",
-                        }
-                    ],
-                },
-            )
+        # TODO: add lib.roles function to enable ec2 masters role
 
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
@@ -164,7 +113,7 @@ class EksStack(Stack):
         )
         # 2. Creates an IAM policy for the service account
         dir_path = os.path.dirname(os.path.realpath(__file__))
-        file_path = os.path.join(dir_path, "../policies/alb-svca-iam-policy.json")
+        file_path = os.path.join(dir_path, "policies/alb-svca-iam-policy.json")
         with open(file_path, mode="r") as file:
             policy_document = json.load(file)
 
@@ -356,7 +305,8 @@ class EksStack(Stack):
         CfnOutput(self, "Subnet-Ids", value=Fn.join(",", private_subnet_ids))
         CfnOutput(self, "CertificateArn", value=self.certificate_arn)
         CfnOutput(self, "ECRRepoURL", value=self.ecr_repo_url)
-        CfnOutput(self, "CustomerManagedKeyArn", value=self.customer_managed_key_arn)
+
+        # CfnOutput(self, "CustomerManagedKeyArn", value=self.customer_managed_key_arn)
         CfnOutput(
             self,
             "ALBServiceAccountName",
@@ -376,4 +326,4 @@ class EksStack(Stack):
         # )
 
         # Change the endpoint for the created EKS cluster to PRIVATE
-        self.cluster.cluster_endpoint_access = eks.EndpointAccess.PRIVATE
+        # self.cluster.cluster_endpoint_access = eks.EndpointAccess.PRIVATE
