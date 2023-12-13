@@ -13,47 +13,67 @@ from aws_cdk import (
     aws_iam as iam,
 )
 from lib import constants
+from stacks import vpc
 
 
 class BaseStack(Stack):
     def __init__(
-        self, scope: Construct, id: str, vpc_id, private_subnet_ids, **kwargs
+        self,
+        scope: Construct,
+        id: str,
+        vpc_id: str,
+        subnet_ids: str,
+        ecr_repo_url: str,
+        certificate_arn: str,
+        **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
         # -------------------------------------------------------------------------------------------------------------
         # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
 
-        # If vpc_id and private_subnet_ids are provided, we will use those values
-        if vpc_id and private_subnet_ids:
-            self.vpc_id = vpc_id
-            self.private_subnet_ids = private_subnet_ids
-
+        # If vpc_id and subnet_ids are provided, we will use those values
+        if vpc_id and subnet_ids:
             # We get the VPC type from the provided environment variable
-            self.vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
+            self.vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=vpc_id)
 
             # We get the subnets type from the provided environment variable
-            # Strip any spaces in private_subnet_ids since it should just be a comma delimited list
-            self.private_subnet_ids = [
-                subnet.strip() for subnet in self.private_subnet_ids
-            ]
+            # Strip any spaces in subnet_ids since it should just be a comma delimited list
+            self.subnet_ids = [subnet.strip() for subnet in subnet_ids.split(",")]
+
+            # Perform the lookup/attributes for each subnet ID
             self.subnets = [
                 ec2.Subnet.from_subnet_attributes(
-                    self, f"Subnet{n}", subnet_id=self.private_subnet_ids[n]
+                    self, f"Subnet{n}", subnet_id=self.subnet_ids[n]
                 )
-                for n in range(len(self.private_subnet_ids))
+                for n in range(len(self.subnet_ids))
             ]
+        # If DEPLOY_VPC_STACK is set to true, we will create a VPC stack and use the outputs from that stack
+        # We want to use this toggle, since we don't want to automatically assume we can create one for the user
+        elif constants.DEPLOY_VPC_STACK.lower() == "true":
+            self.vpc = vpc.create_vpc(self, "Vpc", **kwargs)
+            self.subnets = self.vpc.select_subnets(
+                subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
+            ).subnets
         else:
-            # If vpc_id and private_subnet_ids are not provided, we will create a VPC and subnets
-            self.create_vpc(self, "VPC")
+            raise ValueError(
+                "Please provide a VPC ID and Subnet IDs or set DEPLOY_VPC_STACK to true to create a VPC stack for you."
+            )
+
+        # Sanitize the ECR repo URL the user provides
+        self.ecr_repo_url = (
+            ecr_repo_url.replace("http://", "").replace("https://", "").rstrip("/")
+        )
 
         # -------------------------------------------------------------------------------------------------------------
         # S3 Bucket ---------------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        # Create an S3 bucket with encryption and a lifecycle policy, a strict bucket policy only allowing access to objects from an IAM role that EKS will use. Bucket must be fully private
+        # Create an S3 bucket with encryption and a lifecycle policy, a strict bucket policy only allowing access to
+        # objects from an IAM role that EKS will use. Bucket must be fully private
         self.bucket = s3.Bucket(
             self,
             "bucket",
+            access_control=s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
             bucket_name=f"{constants.STACK_PREFIX}-bucket",
             encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
@@ -65,199 +85,72 @@ class BaseStack(Stack):
                 )
             ],
             removal_policy=RemovalPolicy.DESTROY,
+            versioned=True,
         )
+        Tags.of(self.bucket).add(
+            "Name",
+            f"{constants.STACK_PREFIX}-bucket-{constants.STACK_AFFIX}",
+        )
+        # Create a bucket policy that only allows a specific IAM role to access the bucket
+        # The IAM role will be created later
         self.bucket_policy = iam.PolicyStatement(
-            actions=["s3:GetObject", "s3:PutObject"],
-            resources=[self.bucket.arn_for_objects("*")],
-            principals=[
-                iam.Role.from_role_arn(
-                    self,
-                    "Role",
-                    f"arn:aws:iam::{Aws.ACCOUNT_ID}:role/{constants.STACK_PREFIX}*",
-                )
+            actions=[
+                "s3:GetObject",
+                "s3:PutObject",
+                "s3:DeleteObject",
+                "s3:ListBucket",
+                "s3:GetObjectVersion",
+                "s3:PutObjectAcl",
+                "s3:GetObjectAcl",
+                "s3:ListMultipartUploadParts",
+                "s3:AbortMultipartUpload",
             ],
+            resources=[self.bucket.bucket_arn, self.bucket.arn_for_objects("*")],
+            principals=[
+                iam.AccountRootPrincipal()
+            ],  # TODO: Change this to the EKS role
         )
         self.bucket.add_to_resource_policy(self.bucket_policy)
+
+        # Add a policy statement that denies all principals and s3 actions to the newly created bucket,
+        # if aws:SecureTransport is false
+        self.bucket_policy_deny = iam.PolicyStatement(
+            actions=["s3:*"],
+            resources=[self.bucket.bucket_arn, self.bucket.arn_for_objects("*")],
+            effect=iam.Effect.DENY,
+            principals=[iam.AnyPrincipal()],
+            conditions={"Bool": {"aws:SecureTransport": False}},
+        )
+        self.bucket.add_to_resource_policy(self.bucket_policy_deny)
 
         # -------------------------------------------------------------------------------------------------------------
         # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        CfnOutput(self, "bucket_name", value=self.bucket.bucket_name)
-        CfnOutput(self, "bucket_arn", value=self.bucket.bucket_arn)
-        CfnOutput(self, "Vpc-Id", value=self.vpc.vpc_id)
-        # CfnOutput(
-        #     self,
-        #     "Subnet-Ids",
-        #     value=Fn.join(",", [subnet.subnet_id for subnet in self.subnets]),
-        # )
-
-    # -------------------------------------------------------------------------------------------------------------
-    # Functions ---------------------------------------------------------------------------------------------------
-    # -------------------------------------------------------------------------------------------------------------
-
-    def create_vpc(self, scope: Construct, construct_id: str):
-        # Create a fully private VPC networking without internet gateways or NAT gateways
-        self.vpc = ec2.Vpc(
+        CfnOutput(
             self,
-            "VPC",
-            vpc_name=f"{constants.STACK_PREFIX}-private-vpc",
-            ip_addresses=ec2.IpAddresses.cidr("10.0.0.0/16"),
-            max_azs=4,  # Default is all AZs in the region
-            nat_gateways=0,
-            create_internet_gateway=False,
-            restrict_default_security_group=True,
-            subnet_configuration=[
-                ec2.SubnetConfiguration(
-                    name=f"{constants.STACK_PREFIX}-Isolated",
-                    subnet_type=ec2.SubnetType.PRIVATE_ISOLATED,
-                    cidr_mask=19,  # 4 /18s in /16
-                )
-            ],
-            enable_dns_support=True,
-            enable_dns_hostnames=True,
-            gateway_endpoints={
-                "S3Endpoint": ec2.GatewayVpcEndpointOptions(
-                    service=ec2.GatewayVpcEndpointAwsService.S3
-                    # Add only to ISOLATED subnets - not needed since we only have private subnets
-                    # subnets=[aws_ec2.SubnetSelection(subnet_type=aws_ec2.SubnetType.PRIVATE_ISOLATED)
-                )
-            },
+            "BucketName",
+            value=self.bucket.bucket_name,
+            description="Bucket Name for shuffle-tables",
         )
-        Tags.of(self.vpc).add(
-            "Name", f"{constants.STACK_PREFIX}-private-vpc-{constants.STACK_AFFIX}"
+        CfnOutput(self, "BucketArn", value=self.bucket.bucket_arn)
+        CfnOutput(self, "VpcId", value=self.vpc.vpc_id, description="VPC ID")
+        CfnOutput(
+            self,
+            "SubnetIds",
+            value=Fn.join(",", [subnet.subnet_id for subnet in self.subnets]),
+            description="Comma delimited list of subnet IDs",
         )
-
-        # tag all subnets
-        selection = self.vpc.select_subnets(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED)
-
-        for index, subnet in enumerate(selection.subnets, start=1):
-            Tags.of(subnet).add("Name", f"{constants.STACK_PREFIX}-isolated{index}")
-            Tags.of(subnet).add("kubernetes.io/role/internal-elb", "1")
-            # This tag was only used by Amazon EKS. You can remove the tag without impacting your services. It's not used with clusters that are version 1.15 or later.
-            # Tags.of(subnet).add(
-            #     f"kubernetes.io/cluster/{constants.STACK_PREFIX}-eks-cluster",
-            #     "owned",
-            # )
-
-        # Add required VPC endpoints
-
-        # Lambda Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "EFSInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.ELASTIC_FILESYSTEM,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        CfnOutput(
+            self,
+            "EcrRepoUrl",
+            value=self.ecr_repo_url,
+            description="ECR Repo URL",
         )
-
-        # Lambda Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "LambdaInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.LAMBDA_,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # Step Functions Sync Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "StatesInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.STEP_FUNCTIONS,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-        # Step Functions Sync Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "StatesSyncInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.STEP_FUNCTIONS_SYNC,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # EC2 Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "EC2InterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.EC2,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # ALB Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "ALBInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.ELASTIC_LOAD_BALANCING,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # SSM Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "SSMInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.SSM,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # STS Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "STSInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.STS,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # ECR Docker Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "EcrDockerEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # ECR API Interface Endpoint
-        self.vpc.add_interface_endpoint(
-            "EcrApiEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.ECR,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # EKS Interface Endpoints
-        self.vpc.add_interface_endpoint(
-            "EKSInterfaceEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.EKS,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # CloudWatch Interface Endpoints
-        self.vpc.add_interface_endpoint(
-            "CloudWatchEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # CloudWatch Logs Interface Endpoints
-        self.vpc.add_interface_endpoint(
-            "CloudWatchLogsEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # CloudWatch Events Interface Endpoints
-        self.vpc.add_interface_endpoint(
-            "CloudWatchEventsEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
-        )
-
-        # CloudFormation Interface Endpoints
-        self.vpc.add_interface_endpoint(
-            "CloudFormationEndpoint",
-            service=ec2.InterfaceVpcEndpointAwsService.CLOUDFORMATION,
-            private_dns_enabled=True,
-            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        CfnOutput(
+            self,
+            "CertificateArn",
+            value=certificate_arn,
+            description="Certificate ARN",
         )
 
     @property
@@ -265,9 +158,21 @@ class BaseStack(Stack):
         return self.bucket
 
     @property
-    def get_vpc_id(self) -> ec2.IVpc:
+    def get_bucket_arn(self) -> str:
+        return self.bucket.bucket_arn
+
+    @property
+    def get_vpc(self) -> ec2.IVpc:
         return self.vpc
 
     @property
-    def get_subnet_ids(self) -> Sequence[ec2.ISubnet]:
+    def get_subnets(self) -> Sequence[ec2.ISubnet]:
         return self.subnets
+
+    @property
+    def get_ecr_url(self) -> str:
+        return self.ecr_repo_url
+
+    @property
+    def get_certificate_arn(self) -> str:
+        return self.certificate_arn
