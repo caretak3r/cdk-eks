@@ -1,6 +1,5 @@
 from constructs import Construct
-from aws_cdk import Stack, Tags, CfnOutput
-from aws_cdk import aws_ec2 as ec2
+from aws_cdk import Tags, aws_ec2 as ec2
 from lib import constants
 
 
@@ -47,8 +46,35 @@ def create_vpc(scope: Construct, construct_id: str, **kwargs) -> ec2.Vpc:
     for svc, n in [
         [ec2.InterfaceVpcEndpointAwsService.EC2, "EC2"],
         [ec2.InterfaceVpcEndpointAwsService.ECR, "ECR"],
-        [ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER, "ECR_DOCKER"],
-        [ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER, "SECRETS_MANAGER"],
+        [ec2.InterfaceVpcEndpointAwsService.ECR_DOCKER, "ECRDOCKER"],
+        [ec2.InterfaceVpcEndpointAwsService.SECRETS_MANAGER, "SECRETSMANAGER"],
         [ec2.InterfaceVpcEndpointAwsService.STS, "STS"],
+        [ec2.InterfaceVpcEndpointAwsService.CLOUDFORMATION, "CLOUDFORMATION"],
+        [ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH, "CLOUDWATCH"],
+        [ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_LOGS, "CLOUDWATCHLOGS"],
+        [ec2.InterfaceVpcEndpointAwsService.CLOUDWATCH_EVENTS, "CLOUDWATCHEVENTS"],
+        [ec2.InterfaceVpcEndpointAwsService.ELASTIC_FILESYSTEM, "ELASTICFILESYSTEM"],
+        [ec2.InterfaceVpcEndpointAwsService.LAMBDA_, "LAMBDA"],
+        [ec2.InterfaceVpcEndpointAwsService.STEP_FUNCTIONS, "STEPFUNCTIONS"],
+        [ec2.InterfaceVpcEndpointAwsService.STEP_FUNCTIONS_SYNC, "STEPFUNCTIONSSYNC"],
+        [
+            ec2.InterfaceVpcEndpointAwsService.ELASTIC_LOAD_BALANCING,
+            "ELASTICLOADBALANCING",
+        ],
+        [ec2.InterfaceVpcEndpointAwsService.SSM, "SSM"],
+        [ec2.InterfaceVpcEndpointAwsService.EKS, "EKS"],
+        [ec2.InterfaceVpcEndpointAwsService.RDS, "RDS"],
+        [
+            ec2.InterfaceVpcEndpointAwsService.PRIVATE_CERTIFICATE_AUTHORITY,
+            "PRIVATECERTIFICATEAUTHORITY",
+        ],
+        [ec2.InterfaceVpcEndpointAwsService.KMS, "KMS"],
+    ]:
+        vpc.add_interface_endpoint(
+            f"{n}InterfaceEndpoint",
+            service=svc,
+            private_dns_enabled=True,
+            subnets=ec2.SubnetSelection(subnet_type=ec2.SubnetType.PRIVATE_ISOLATED),
+        )
 
-    ]
+    return vpc

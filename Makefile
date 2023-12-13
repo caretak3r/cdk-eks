@@ -26,6 +26,6 @@ synth:
 
 # deploy: this runs the cdk deploy command
 deploy:
-	cdk deploy VpcStack --require-approval=never --no-previous-parameters --no-rollback --verbose --debug
+	cdk deploy * --require-approval=never --no-previous-parameters --verbose --debug --no-rollback
 
 .PHONY: builds shell bootstrap synth deploy

@@ -1,9 +1,11 @@
+from typing import Sequence
 from constructs import Construct
 from aws_cdk import CfnOutput, Duration, Stack, Tags, RemovalPolicy
 from aws_cdk import (
     aws_ec2 as ec2,
     aws_rds as rds,
     aws_logs as logs,
+    aws_kms as kms,
     aws_secretsmanager as secrets,
 )
 from stacks.kms import create_kms_key
@@ -15,36 +17,16 @@ class RdsStack(Stack):
         self,
         scope: Construct,
         id: str,
-        vpc_id,
-        private_subnet_ids,
-        customer_managed_cmk=None,
+        vpc: ec2.IVpc,
+        subnets: Sequence[ec2.ISubnet],
+        customer_managed_cmk: kms.IKey,
+        aurora_cluster_username: str = f"{constants.STACK_PREFIX}admin",
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
-        # -------------------------------------------------------------------------------------------------------------
-        # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
-        # -------------------------------------------------------------------------------------------------------------
-        self.vpc_id = vpc_id
-        self.private_subnet_ids = private_subnet_ids
-        self.customer_managed_cmk = customer_managed_cmk
-
-        # We get the VPC type from the provided environment variable
-        vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
-
-        # We get the subnets type from the provided environment variable
-        # Strip any spaces in private_subnet_ids since it should just be a comma delimited list
-        self.private_subnet_ids = [subnet.strip() for subnet in self.private_subnet_ids]
-        subnets = [
-            ec2.Subnet.from_subnet_attributes(
-                self, f"Subnet{n}", subnet_id=self.private_subnet_ids[n]
-            )
-            for n in range(len(self.private_subnet_ids))
-        ]
-        # acknowledge warning: https://github.com/aws/aws-cdk/pull/3171
-
-        # If customer does not provide a customer managed key, we will create one using the stacks/kms.py function
-        if not self.customer_managed_cmk:
+        # KMS: If customer does not provide a customer managed key, we will create one using the stacks/kms.py function
+        if not customer_managed_cmk:
             self.customer_managed_cmk = create_kms_key(
                 self,
                 "RdsKms",
@@ -53,6 +35,23 @@ class RdsStack(Stack):
                 enable_key_rotation=True,
             )
 
+        # # SECRETS MANAGER: Create a secret for the Aurora cluster credentials
+        # aurora_cluster_secret = secrets.Secret(
+        #     self,
+        #     "AuroraClusterCredentials",
+        #     secret_name=f"{constants.STACK_PREFIX}-aurora-cluster-credentials",
+        #     generate_secret_string=secrets.SecretStringGenerator(
+        #         exclude_punctuation=True,
+        #         include_space=False,
+        #         generate_string_key="password",
+        #         password_length=30,
+        #         secret_string_template='{"username":"' + aurora_cluster_username + '"}',
+        #     ),
+        # )
+
+        # aurora_cluster_credentials = rds.Credentials.from_secret(
+        #     aurora_cluster_secret, aurora_cluster_username
+        # )
         # -------------------------------------------------------------------------------------------------------------
         # RDS CLUSTER CREATION ----------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
@@ -88,6 +87,7 @@ class RdsStack(Stack):
                 version=rds.AuroraPostgresEngineVersion.VER_14_6
             ),
             cluster_identifier=f"{constants.STACK_PREFIX}-aurora-cluster",
+            # credentials=aurora_cluster_credentials,
             cloudwatch_logs_exports=["postgresql"],
             cloudwatch_logs_retention=logs.RetentionDays.ONE_MONTH,
             default_database_name=f"{constants.DEFAULT_DATABASE_NAME}",
@@ -103,18 +103,16 @@ class RdsStack(Stack):
             vpc=vpc,
             vpc_subnets=ec2.SubnetSelection(subnets=subnets),
             security_groups=[db_security_group],
-            # subnet_group=rds.SubnetGroup(
-            #     self,
-            #     id=f"{constants.STACK_PREFIX}-AuroraSubnetGroup",
-            #     vpc=vpc,
-            #     description=id + " Subnet group for RDS",
-            #     vpc_subnets=ec2.SubnetSelection(
-            #         subnet_type=ec2.SubnetType.PRIVATE_ISOLATED
-            #     ),
-            #     subnet_group_name=id + "-SubnetGroup",
-            # ),
+            subnet_group=rds.SubnetGroup(
+                self,
+                id=f"{constants.STACK_PREFIX}-AuroraSubnetGroup",
+                vpc=vpc,
+                description=id + " Subnet group for RDS",
+                vpc_subnets=ec2.SubnetSelection(subnets=subnets),
+                subnet_group_name=id + "-SubnetGroup",
+            ),
             storage_encrypted=True,
-            storage_encryption_key=self.customer_managed_cmk,
+            storage_encryption_key=self.customer_managed_cmk.key_arn,
             writer=rds.ClusterInstance.provisioned(
                 "writer",
                 publicly_accessible=False,
