@@ -317,13 +317,3 @@ class EksStack(Stack):
             "ALBServiceAccountNamespace",
             value=alb_service_account.service_account_namespace,
         )
-        # CfnOutput(
-        #     self,
-        #     "ALBIngressAddressRGUDI",
-        #     value=self.cluster.get_ingress_load_balancer_address(
-        #         ingress_name="alb", namespace="kube-system"
-        #     ),
-        # )
-
-        # Change the endpoint for the created EKS cluster to PRIVATE
-        # self.cluster.cluster_endpoint_access = eks.EndpointAccess.PRIVATE
