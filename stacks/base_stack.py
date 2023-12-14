@@ -11,9 +11,11 @@ from aws_cdk import (
     aws_s3 as s3,
     aws_ec2 as ec2,
     aws_iam as iam,
+    aws_kms as kms,
 )
 from lib import constants
 from stacks import vpc
+from stacks.kms import create_kms_key
 
 
 class BaseStack(Stack):
@@ -124,6 +126,16 @@ class BaseStack(Stack):
         self.bucket.add_to_resource_policy(self.bucket_policy_deny)
 
         # -------------------------------------------------------------------------------------------------------------
+        # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        self.init_cmk_key = create_kms_key(
+            self,
+            "InitCmk",
+            self.region,
+            self.account,
+            enable_key_rotation=False,
+        )
+        # -------------------------------------------------------------------------------------------------------------
         # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
         CfnOutput(
@@ -152,6 +164,12 @@ class BaseStack(Stack):
             value=certificate_arn,
             description="Certificate ARN",
         )
+        CfnOutput(
+            self,
+            "InitCmkArn",
+            value=self.init_cmk_key.key_arn,
+            description="Init CMK ARN for application-specific use",
+        )
 
     @property
     def get_bucket(self) -> s3.Bucket:
@@ -173,6 +191,11 @@ class BaseStack(Stack):
     def get_ecr_url(self) -> str:
         return self.ecr_repo_url
 
+    # TODO: if customer does not private a certificate, we will create one using the stacks/certificate.py function
     @property
     def get_certificate_arn(self) -> str:
         return self.certificate_arn
+
+    @property
+    def get_init_cmk_key(self) -> kms.Key:
+        return self.init_cmk_key

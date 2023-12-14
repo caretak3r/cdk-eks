@@ -14,6 +14,7 @@ from aws_cdk import (
 )
 from aws_cdk.lambda_layer_kubectl_v28 import KubectlV28Layer
 from constructs import Construct
+from stacks.kms import create_kms_key
 
 
 class EksStack(Stack):
@@ -23,10 +24,22 @@ class EksStack(Stack):
         id: str,
         vpc: ec2.IVpc,
         subnets: Sequence[ec2.ISubnet],
+        customer_managed_cmk: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # -------------------------------------------------------------------------------------------------------------
+        # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        if not customer_managed_cmk:
+            self.customer_managed_cmk = create_kms_key(
+                self,
+                "EksCmk",
+                self.region,
+                self.account,
+                enable_key_rotation=True,
+            )
         # -------------------------------------------------------------------------------------------------------------
         # CLUSTER CREATION --------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
@@ -54,7 +67,7 @@ class EksStack(Stack):
             cluster_handler_environment={"AWS_STS_REGIONAL_ENDPOINTS": "regional"},
             kubectl_environment={"AWS_STS_REGIONAL_ENDPOINTS": "regional"},
             # role=cluster_admin_role,  # Use the cluster admin role created above (Automatically created for you)
-            # secrets_encryption_key = eks.SecretsEncryptionKey.KMS,  # Use the default KMS key
+            secrets_encryption_key=self.customer_managed_cmk,  # Use the default KMS key
             # security_group=cluster_security_group,  # Use the cluster security group created above (Automatically created for you)
             version=eks.KubernetesVersion.V1_28,
             vpc=vpc,
@@ -71,7 +84,39 @@ class EksStack(Stack):
         # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "AWS REGION", value=self.region)
         CfnOutput(self, "AWS ACCOUNT ID", value=self.account)
-        CfnOutput(self, "ClusterName", value=self.cluster.cluster_name)
-        CfnOutput(self, "ClusterArn", value=self.cluster.cluster_arn)
-        CfnOutput(self, "ClusterEndpoint", value=self.cluster.cluster_endpoint)
-        CfnOutput(self, "Vpc-Id", value=vpc.vpc_id)
+        CfnOutput(
+            self,
+            "ClusterName",
+            value=self.cluster.cluster_name,
+            description="EKS Fargate cluster name",
+        )
+        CfnOutput(
+            self,
+            "ClusterArn",
+            value=self.cluster.cluster_arn,
+            description="EKS Fargate cluster ARN",
+        )
+        CfnOutput(
+            self,
+            "ClusterEndpoint",
+            value=self.cluster.cluster_endpoint,
+            description="EKS Fargate cluster endpoint",
+        )
+        CfnOutput(self, "Vpc-Id", value=vpc.vpc_id, description="VPC ID")
+        CfnOutput(
+            self, "Vpc-Subnets", value=str(subnets), description="VPC private subnets"
+        )
+        CfnOutput(
+            self,
+            "CustomerManagedCmkArn",
+            value=self.customer_managed_cmk.key_arn,
+            description="Customer Managed CMK for EKS envelope encryption",
+        )
+
+        @property
+        def get_cluster(self) -> eks.FargateCluster:
+            return self.cluster
+
+        @property
+        def get_customer_managed_cmk(self) -> kms.Key:
+            return self.customer_managed_cmk
