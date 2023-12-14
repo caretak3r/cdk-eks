@@ -6,7 +6,7 @@ import lib.constants as constants
 # from stacks.vpc_stack import VpcStack
 from stacks.base_stack import BaseStack
 from stacks.eks_stack_mini import EksStack
-# from stacks.rds_stack import RdsStack
+from stacks.rds_stack import RdsStack
 # from stacks.efs_stack import EfsStack
 # TODO: use tag_stacks.py to tag stacks with default tags (managed_by, env, deployment_id)
 
@@ -65,9 +65,10 @@ base_stack = BaseStack(
 # rds_stack = RdsStack(
 #     app,
 #     "RdsStack",
+#     base_stack.get_vpc,
+#     base_stack.get_subnets,
+#     customer_managed_cmk=os.getenv("AWS_KMS_RDS_KEY_ARN"),
 #     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_AFFIX}",
-#     vpc_id=os.getenv("AWS_VPC_ID"),
-#     private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
 #     **env,
 # )
 
@@ -78,25 +79,32 @@ base_stack = BaseStack(
 # efs_stack = EfsStack(
 #     app,
 #     "EfsStack",
+#     base_stack.get_vpc,
+#     base_stack.get_subnets,
+#     customer_managed_cmk=os.getenv("AWS_KMS_EFS_KEY_ARN"),
 #     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_AFFIX}",
-#     vpc_id=os.getenv("AWS_VPC_ID"),
-#     private_subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS").split(","),
 #     **env,
 # )
 
-# --------------------
-# Create an EKS Stack
-# --------------------
+# ------------------------
+# Create an EKS Stack Mini
+# ------------------------
+# This will provision an EKS Fargate Cluster and a CMK key.
 eks_stack = EksStack(
     app,
     "EksStack",
     base_stack.get_vpc,
     base_stack.get_subnets,
+    customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
     # base_stack.get_ecr_url,
     # base_stack.get_certificate_arn,
     stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
     **env,
 )
+
+# -------------------
+# Create an EKS Stack
+# -------------------
 # eks_stack = EksStack(
 #     app,
 #     "EksStack",

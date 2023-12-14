@@ -19,12 +19,15 @@ class RdsStack(Stack):
         id: str,
         vpc: ec2.IVpc,
         subnets: Sequence[ec2.ISubnet],
-        customer_managed_cmk: kms.IKey,
+        customer_managed_cmk: str,
         aurora_cluster_username: str = f"{constants.STACK_PREFIX}admin",
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # -------------------------------------------------------------------------------------------------------------
+        # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
         # KMS: If customer does not provide a customer managed key, we will create one using the stacks/kms.py function
         if not customer_managed_cmk:
             self.customer_managed_cmk = create_kms_key(

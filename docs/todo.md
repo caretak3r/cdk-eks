@@ -71,4 +71,4 @@
 
 - [ ] Provide a bootstrap template, to minimize resources that are created, do we even need the ECR repo created from bootstrap? 
 
-- [ ] 
+- [ ] Implement EFS 
