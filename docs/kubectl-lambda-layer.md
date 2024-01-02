@@ -27,3 +27,6 @@ Here's what is specifically set up with the KubectlLayer:
 - File Paths: The kubectl tool is installed at /opt/kubectl/kubectl, and helm is at /opt/helm/helm. You must reference these paths in your Lambda function code when invoking these tools​1​​2​.
 
 Your Lambda function code must include the logic for executing these tools with the appropriate commands. For example, you might have a Lambda function triggered by an AWS event (such as S3 upload, SNS notification, etc.) that then runs a kubectl command to update a Kubernetes deployment or to retrieve the status of resources within your EKS cluster.
+
+
+- REF: https://github.com/aws/aws-cdk/tree/main/packages/aws-cdk-lib/aws-eks#using-existing-clusters

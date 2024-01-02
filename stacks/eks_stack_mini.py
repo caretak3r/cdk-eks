@@ -11,6 +11,7 @@ from aws_cdk import (
     aws_iam as iam,
     aws_logs as logs,
     aws_kms as kms,
+    aws_lambda as lambda_,
 )
 from aws_cdk.lambda_layer_kubectl_v28 import KubectlV28Layer
 from constructs import Construct
@@ -28,6 +29,33 @@ class EksStack(Stack):
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
+
+        # -------------------------------------------------------------------------------------------------------------
+        # IAM Roles ---------------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        control_plane_role = iam.Role(
+            self,
+            "EksControlPlaneRole",
+            assumed_by=iam.ServicePrincipal("eks.amazonaws.com"),
+            managed_policies=[
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "AmazonEKSClusterPolicy"
+                ),
+                iam.ManagedPolicy.from_aws_managed_policy_name(
+                    "AmazonEKSVPCResourceController"
+                ),
+            ],
+        )
+        Tags.of(control_plane_role).add(
+            "Name",
+            f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_AFFIX}",
+        )
+
+        masters_role = iam.Role(
+            self,
+            "MastersRole",
+            assumed_by=iam.AccountPrincipal(account_id=self.account),
+        )
 
         # -------------------------------------------------------------------------------------------------------------
         # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
@@ -62,7 +90,9 @@ class EksStack(Stack):
             endpoint_access=eks.EndpointAccess.PUBLIC_AND_PRIVATE,  # Enable private access to the cluster endpoint
             kubectl_layer=kubectl_layer,
             # masters_role= Automatically created for us
+            output_cluster_name=True,  # Output the cluster name
             output_config_command=True,  # Output the aws eks update-kubeconfig command
+            output_masters_role_arn=True,  # Output the masters role ARN
             place_cluster_handler_in_vpc=True,  # Place the cluster handler in the VPC
             cluster_handler_environment={"AWS_STS_REGIONAL_ENDPOINTS": "regional"},
             kubectl_environment={"AWS_STS_REGIONAL_ENDPOINTS": "regional"},
@@ -77,6 +107,8 @@ class EksStack(Stack):
             "Name",
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
+
+        print(self.cluster.__dir__())
 
         # -------------------------------------------------------------------------------------------------------------
         # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
@@ -112,11 +144,37 @@ class EksStack(Stack):
             value=self.customer_managed_cmk.key_arn,
             description="Customer Managed CMK for EKS envelope encryption",
         )
+        CfnOutput(
+            self,
+            "SecurityGroupId",
+            value=self.cluster.cluster_security_group_id,
+            description="Security Group ID",
+        )
 
-        @property
-        def get_cluster(self) -> eks.FargateCluster:
-            return self.cluster
+    @property
+    def get_cluster(self) -> eks.Cluster:
+        return self.cluster
 
-        @property
-        def get_customer_managed_cmk(self) -> kms.Key:
-            return self.customer_managed_cmk
+    @property
+    def get_cluster_name(self) -> str:
+        return self.cluster.cluster_name
+
+    @property
+    def get_customer_managed_cmk(self) -> kms.Key:
+        return self.customer_managed_cmk
+
+    @property
+    def get_kubectl_role_arn(self) -> str:
+        return self.cluster.kubectl_role.role_arn
+
+    @property
+    def get_kubectl_lambda_role(self) -> str:
+        return self.cluster.kubectl_lambda_role.role_arn
+
+    @property
+    def get_oidc_provider_arn(self) -> str:
+        return self.cluster.open_id_connect_provider.open_id_connect_provider_arn
+
+    @property
+    def get_cluster_security_group_id(self) -> str:
+        return self.cluster.cluster_security_group_id
