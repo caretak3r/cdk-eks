@@ -6,7 +6,9 @@ import lib.constants as constants
 # from stacks.vpc_stack import VpcStack
 from stacks.base_stack import BaseStack
 from stacks.eks_stack_mini import EksStack
-from stacks.rds_stack import RdsStack
+
+# from stacks.rds_stack import RdsStack
+from stacks.alb_stack import AlbStack
 # from stacks.efs_stack import EfsStack
 # TODO: use tag_stacks.py to tag stacks with default tags (managed_by, env, deployment_id)
 
@@ -115,6 +117,21 @@ eks_stack = EksStack(
 #     ecr_repo_url=os.getenv("AWS_ECR_REPO_URL"),
 #     **env,
 # )
+
+# -------------------
+# ALB Stack ---------
+# -------------------
+alb_stack = AlbStack(
+    app,
+    "AlbStack",
+    base_stack.get_vpc,
+    base_stack.get_ecr_url,
+    eks_stack.get_cluster,
+    eks_stack.get_kubectl_role_arn,
+    eks_stack.get_kubectl_lambda_role,
+    stack_name=f"{constants.STACK_PREFIX}-logging-stack-{constants.STACK_AFFIX}",
+    **env,
+)
 
 # ---------------------
 # Synthesize the stacks
