@@ -1,5 +1,8 @@
 # Kubectl Provider Reuse 
 
+There seems to be multiple ways to re-use a KubectlProvider created by the EKS L2 construct.
+ 
+
 To reuse the KubectlProvider within an AWS CDK project in Python, you can use the KubectlProvider class from the aws_cdk.aws_eks package. Here's a general outline of how to achieve this:
 Import the KubectlProvider: Import the KubectlProvider for the existing EKS cluster using the from_kubectl_provider_attributes method.
 Use the KubectlProvider: Once you have imported the KubectlProvider, you can use it to perform kubectl operations against the cluster within your CDK project.
