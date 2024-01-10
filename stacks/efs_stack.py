@@ -6,35 +6,33 @@ from aws_cdk import (
     aws_kms as kms,
     aws_iam as iam,
 )
-import constants
+from lib import constants
+from typing import Sequence
+from stacks.kms import create_kms_key
 
 
 class EfsStack(Stack):
     def __init__(
-        self, scope: Construct, id: str, vpc_id, private_subnet_ids, **kwargs
+        self,
+        scope: Construct,
+        id: str,
+        vpc: ec2.IVpc,
+        subnets: Sequence[ec2.ISubnet],
+        customer_managed_cmk: str,
+        **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
-
         # -------------------------------------------------------------------------------------------------------------
-        # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
+        # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        self.vpc_id = vpc_id
-        self.private_subnet_ids = private_subnet_ids
-
-        # We get the VPC type from the provided environment variable
-        vpc = ec2.Vpc.from_lookup(self, "VPC", vpc_id=self.vpc_id)
-
-        # We get the subnets type from the provided environment variable
-        # Strip any spaces in private_subnet_ids since it should just be a comma delimited list
-        self.private_subnet_ids = [subnet.strip() for subnet in self.private_subnet_ids]
-        subnets = [
-            ec2.Subnet.from_subnet_attributes(
-                self, f"Subnet{n}", subnet_id=self.private_subnet_ids[n]
+        if not customer_managed_cmk:
+            self.customer_managed_cmk = create_kms_key(
+                self,
+                "EfsCmk",
+                self.region,
+                self.account,
+                enable_key_rotation=True,
             )
-            for n in range(len(self.private_subnet_ids))
-        ]
-        # acknowledge warning: https://github.com/aws/aws-cdk/pull/3171
-
         # -------------------------------------------------------------------------------------------------------------
         # EFS CREATION ------------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------

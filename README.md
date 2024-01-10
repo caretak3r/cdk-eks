@@ -1,16 +1,28 @@
 # eks-cdk-project
 
-This project uses python AWS CDK to deploy a private VPC and networking resources, an EKS cluster with Fargate enabled profiles, a Cognito pool, S3 buckets, Route53 configurations, and deploys helm charts to the resulting cluster.
+This project uses python AWS CDK to deploy a private VPC and networking resources, an EKS cluster with Fargate enabled profiles, S3 buckets, a RDS Aurora cluster, and deploys a number of helm charts to the EKS cluster. This project is intended to work in a "fully-isolated" or "air-gapped" networking environment. 
 
 ---
 
-## Requirements
+## Deployment Control Flow
 
-1. The VPC must have DNS hostname and DNS resolution support. Otherwise, nodes can't register to your cluster. For more information, see DNS attributes for your VPC in the Amazon VPC User Guide.
+---
 
-2. Support envelope encryption for EKS via KMS.
+## Getting Started
 
-3. Use an existing VPC from the customer if passed in as a parameter input during synthesis-time. VPC stack needs to lookup the vpc-id provided and determine which subnets to use as well. 
+1. Build and Run deployment container. 
+
+From the root of the project you can run: 
+
+`make dev`
+
+This will build and run a container for you locally, that will trigger the entrypoint. This entrypoint is an interactive script that allows a user to input values specific to their environment. You can always say `no` which will drop you to the default shell on the container image. You can then run any `make` commands that are available in the `Makefile` or any CDK commands. The container will have all dependencies installed, built, and set up appropriately for consumption. 
+
+Running `make dev` will also mount the project root directory onto the container. **This is for development purposes**. You can make changes to your CDK code and test your changes by running commands on the container. This should speed up the development feedback loop. 
+
+2. Execute `make` commands or `CDK` commands.
+
+3. Test your changes.
 
 ---
 
@@ -26,6 +38,7 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 5. [CDK inner workings](https://github.com/Sceptre/sceptre-cdk-handler/blob/61f347a3a30d7073d6dbd539db1e84c9c4df01f6/README.md)
 
+---
 
 ## Considerations 
 
@@ -35,11 +48,7 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 3. AWS CDK v2 consolidates the stable parts of the AWS Construct Library, including the core library, into a single package, aws-cdk-lib. Developers no longer need to install additional packages for the individual AWS services they use. This single-package approach also means that you don't have to synchronize the versions of the various CDK library packages.
 
-4. Not sure if absolutely needed, but CDK by default uses 1.24 of the kubectl lambda layer, which is used on stack updates. Solve this by `pip install aws-cdk.lambda-layer-kubectl-v27` [REF](https://github.com/cdklabs/awscdk-asset-kubectl/tree/kubectl-v24/main)
+4. The CDK produces a `kubectl` lambda layer to perform `helm` and `kubectl` commands on the cluster, instead of an operator. Read more [here](docs/kubectl-lambda-layer.md)
 
-5. We’ll use boto3 (this is one of the things that I don’t really like about AWS CDK – that a lot of things have to be done not with the methods/constructs of the CDK itself, but with “crutches” in the form of boto3 or other modules/libraries).
-
-6. The CDK produces a `kubectl` lambda layer to perform `helm` and `kubectl` commands on the cluster, instead of an operator. Read more [here](docs/kubectl-lambda-layer.md)
-
-7. A limitation of the current implementation is that eksctl initially creates the cluster with both public and private endpoint access enabled, **and disables public endpoint access after all operations have completed.** This is required because eksctl needs access to the Kubernetes API server to allow self-managed nodes to join the cluster and to support GitOps and Fargate. After these operations have completed, eksctl switches the cluster endpoint access to private-only. This additional update does mean that creation of a fully-private cluster will take longer than for a standard cluster. In the future, eksctl may switch to a VPC-enabled Lambda function to perform these API operations.
+5. A limitation of the current implementation is that eksctl initially creates the cluster with both public and private endpoint access enabled, **and disables public endpoint access after all operations have completed.** This is required because eksctl needs access to the Kubernetes API server to allow self-managed nodes to join the cluster and to support GitOps and Fargate. After these operations have completed, eksctl switches the cluster endpoint access to private-only. This additional update does mean that creation of a fully-private cluster will take longer than for a standard cluster. In the future, eksctl may switch to a VPC-enabled Lambda function to perform these API operations.
 ---
