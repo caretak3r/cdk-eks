@@ -17,10 +17,11 @@ class AlbStack(Stack):
         construct_id: str,
         vpc: ec2.IVpc,
         ecr_repo_url: str,
-        cluster: eks.Cluster,
+        cluster: eks.ICluster,
+        kubectl_layer: lambda_.ILayerVersion,
         kubectl_role_arn: str,
         kubectl_lambda_role: str,
-        # open_id_connect_provider_arn: str,
+        open_id_connect_provider_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -28,18 +29,32 @@ class AlbStack(Stack):
         self.vpc = vpc
         self.ecr_repo_url = ecr_repo_url
         self.cluster = cluster
+        self.kubectl_layer = kubectl_layer
         self.kubectl_role_arn = kubectl_role_arn
         self.kubectl_lambda_role = kubectl_lambda_role
+        self.open_id_connect_provider_arn = open_id_connect_provider_arn
 
         # -------------------------------------------------------------------------------------------------------------
         # Import KubectlProvider and EKS Cluster ----------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        kubectl_provider = eks.KubectlProvider.from_kubectl_provider_attributes(
+        kubectl_provider = eks.KubectlProvider.get_or_create(
+            scope=scope, cluster=cluster
+        )
+
+        oidc_provider = eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
             self,
-            "KubectlProvider",
-            function_arn="",
+            "ImportedOidcProvider",
+            open_id_connect_provider_arn=self.open_id_connect_provider_arn,
+        )
+
+        self.cluster = eks.FargateCluster.from_cluster_attributes(
+            self,
+            "ImportedEksCluster",
+            cluster_name=self.cluster.cluster_name,
+            kubectl_layer=self.kubectl_layer,
             kubectl_role_arn=self.kubectl_role_arn,
-            handler_role=self.kubectl_lambda_role,
+            kubectl_provider=kubectl_provider,
+            open_id_connect_provider=oidc_provider,
         )
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------

@@ -72,3 +72,5 @@
 - [ ] Provide a bootstrap template, to minimize resources that are created, do we even need the ECR repo created from bootstrap? 
 
 - [ ] Implement EFS 
+
+- [ ] Use Aspects to apply configurations to constructs within a single scope 

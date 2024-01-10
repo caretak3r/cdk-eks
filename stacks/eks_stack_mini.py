@@ -33,29 +33,29 @@ class EksStack(Stack):
         # -------------------------------------------------------------------------------------------------------------
         # IAM Roles ---------------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        control_plane_role = iam.Role(
-            self,
-            "EksControlPlaneRole",
-            assumed_by=iam.ServicePrincipal("eks.amazonaws.com"),
-            managed_policies=[
-                iam.ManagedPolicy.from_aws_managed_policy_name(
-                    "AmazonEKSClusterPolicy"
-                ),
-                iam.ManagedPolicy.from_aws_managed_policy_name(
-                    "AmazonEKSVPCResourceController"
-                ),
-            ],
-        )
-        Tags.of(control_plane_role).add(
-            "Name",
-            f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_AFFIX}",
-        )
+        # control_plane_role = iam.Role(
+        #     self,
+        #     "EksControlPlaneRole",
+        #     assumed_by=iam.ServicePrincipal("eks.amazonaws.com"),
+        #     managed_policies=[
+        #         iam.ManagedPolicy.from_aws_managed_policy_name(
+        #             "AmazonEKSClusterPolicy"
+        #         ),
+        #         iam.ManagedPolicy.from_aws_managed_policy_name(
+        #             "AmazonEKSVPCResourceController"
+        #         ),
+        #     ],
+        # )
+        # Tags.of(control_plane_role).add(
+        #     "Name",
+        #     f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_AFFIX}",
+        # )
 
-        masters_role = iam.Role(
-            self,
-            "MastersRole",
-            assumed_by=iam.AccountPrincipal(account_id=self.account),
-        )
+        # masters_role = iam.Role(
+        #     self,
+        #     "MastersRole",
+        #     assumed_by=iam.AccountPrincipal(account_id=self.account),
+        # )
 
         # -------------------------------------------------------------------------------------------------------------
         # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
@@ -108,7 +108,7 @@ class EksStack(Stack):
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
         )
 
-        print(self.cluster.__dir__())
+        # print(self.cluster.__dir__()) # This will show you all the attributes and methods available to you
 
         # -------------------------------------------------------------------------------------------------------------
         # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
@@ -136,7 +136,10 @@ class EksStack(Stack):
         )
         CfnOutput(self, "Vpc-Id", value=vpc.vpc_id, description="VPC ID")
         CfnOutput(
-            self, "Vpc-Subnets", value=str(subnets), description="VPC private subnets"
+            self,
+            "Subnet-Ids",
+            value=Fn.join(",", [subnet.subnet_id for subnet in subnets]),
+            description="Subnet IDs",
         )
         CfnOutput(
             self,
@@ -152,16 +155,8 @@ class EksStack(Stack):
         )
 
     @property
-    def get_cluster(self) -> eks.Cluster:
+    def get_cluster(self) -> eks.ICluster:
         return self.cluster
-
-    @property
-    def get_cluster_name(self) -> str:
-        return self.cluster.cluster_name
-
-    @property
-    def get_customer_managed_cmk(self) -> kms.Key:
-        return self.customer_managed_cmk
 
     @property
     def get_kubectl_role_arn(self) -> str:
@@ -172,9 +167,13 @@ class EksStack(Stack):
         return self.cluster.kubectl_lambda_role.role_arn
 
     @property
-    def get_oidc_provider_arn(self) -> str:
+    def get_open_id_connect_provider_arn(self) -> str:
         return self.cluster.open_id_connect_provider.open_id_connect_provider_arn
 
+    # @property
+    # def get_cluster_security_group_id(self) -> str:
+    #     return self.cluster.cluster_security_group_id
+
     @property
-    def get_cluster_security_group_id(self) -> str:
-        return self.cluster.cluster_security_group_id
+    def get_kubectl_layer(self) -> lambda_.ILayerVersion:
+        return self.cluster.kubectl_layer
