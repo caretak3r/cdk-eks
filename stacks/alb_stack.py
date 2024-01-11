@@ -47,7 +47,7 @@ class AlbStack(Stack):
             open_id_connect_provider_arn=self.open_id_connect_provider_arn,
         )
 
-        self.cluster = eks.FargateCluster.from_cluster_attributes(
+        self.cluster = eks.FargateCluster.from_cluster_attributes( 
             self,
             "ImportedEksCluster",
             cluster_name=self.cluster.cluster_name,
