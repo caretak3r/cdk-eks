@@ -1,6 +1,6 @@
 from aws_cdk import App, Environment, Tags, Stack
 from lib import constants
-from lib.uuid import generate_uuid
+from lib.unique_id import generate_uuid
 
 
 def tag_stack(stack: Stack) -> None:

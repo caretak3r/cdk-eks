@@ -106,8 +106,8 @@ eks_stack = EksStack(
 alb_stack = AlbStack(
     app,
     "AlbStack",
-    base_stack.get_vpc,
-    base_stack.get_ecr_url,
+    vpc=base_stack.get_vpc,
+    ecr_repo_url=base_stack.get_ecr_url,
     cluster=eks_stack.get_cluster,
     kubectl_layer=eks_stack.get_kubectl_layer,
     kubectl_role_arn=eks_stack.get_kubectl_role_arn,
