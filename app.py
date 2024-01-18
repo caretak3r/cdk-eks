@@ -53,9 +53,7 @@ base_stack = BaseStack(
     customer_certificate_arn=os.getenv("AWS_CUSTOMER_CERTIFICATE_ARN"),
     **env,
 )
-
 # print(f"Base Stack Attributes: {base_stack.__dir__()}")
-# print(f"Base Stack Outputs: {base_stack.get_vpc}")
 
 # -------------------------
 # Create RDS Aurora Stack -
@@ -89,18 +87,39 @@ base_stack = BaseStack(
 # Create an EKS Stack -
 # ---------------------
 # This will provision an EKS Fargate Cluster and a CMK key.
+# eks_stack = EksStack(
+#     app,
+#     "EksStack",
+#     vpc=base_stack.get_vpc,
+#     subnets=base_stack.get_subnets,
+#     customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
+#     ecr_repo_url=base_stack.get_ecr_url,
+#     customer_certificate_arn=base_stack.get_customer_certificate_arn,
+#     stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
+#     **env,
+# )
+
 eks_stack = EksStack(
     app,
     "EksStack",
-    vpc=base_stack.get_vpc,
-    subnets=base_stack.get_subnets,
+    vpc=base_stack.vpc,
+    subnets=base_stack.subnets,
     customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
-    ecr_repo_url=base_stack.get_ecr_url,
-    customer_certificate_arn=base_stack.get_customer_certificate_arn,
     stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
     **env,
 )
 eks_stack.add_dependency(base_stack)
+
+alb_stack = AlbStack(
+    app,
+    "AlbStack",
+    vpc=base_stack.vpc,
+    ecr_repo_url=base_stack.ecr_repo_url,
+    cluster=eks_stack.cluster,
+    customer_certificate_arn=base_stack.customer_certificate_arn,
+)
+
+alb_stack.add_dependency(eks_stack)
 
 # print(f"EKS Stack Attributes: {eks_stack.__dir__()}")
 
@@ -111,20 +130,20 @@ eks_stack.add_dependency(base_stack)
 # -----------
 # ALB Stack -
 # -----------
-alb_stack = AlbStack(
-    app,
-    "AlbStack",
-    vpc=eks_stack.get_vpc,
-    ecr_repo_url=eks_stack.get_ecr_url,
-    cluster=eks_stack.get_cluster,
-    kubectl_layer=eks_stack.get_kubectl_layer,
-    kubectl_role_arn=eks_stack.get_kubectl_role_arn,
-    kubectl_lambda_role=eks_stack.get_kubectl_lambda_role,
-    open_id_connect_provider_arn=eks_stack.get_open_id_connect_provider_arn,
-    stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_AFFIX}",
-    **env,
-)
-alb_stack.add_dependency(eks_stack)
+# alb_stack = AlbStack(
+#     app,
+#     "AlbStack",
+#     vpc=eks_stack.get_vpc,
+#     ecr_repo_url=eks_stack.get_ecr_url,
+#     cluster=eks_stack.get_cluster,
+#     kubectl_layer=eks_stack.get_kubectl_layer,
+#     kubectl_role_arn=eks_stack.get_kubectl_role_arn,
+#     kubectl_lambda_role=eks_stack.get_kubectl_lambda_role,
+#     open_id_connect_provider_arn=eks_stack.get_open_id_connect_provider_arn,
+#     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_AFFIX}",
+#     **env,
+# )
+# alb_stack.add_dependency(eks_stack)
 
 # --------------------
 # Cert Manager Stack -
