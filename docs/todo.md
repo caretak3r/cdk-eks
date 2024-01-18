@@ -65,7 +65,7 @@
 
 - [ ] Final account to share images with a customer from, need lead time. 
 
-- [ ] Vertical and Horizontal scaling 
+- [ ] Vertical and Horizontal scaling via Karpenter
 
 - [ ] Pod disruption budgets set to minimize disruption during OS patching by AWS 
 
@@ -74,3 +74,10 @@
 - [ ] Implement EFS 
 
 - [ ] Use Aspects to apply configurations to constructs within a single scope 
+
+- [ ] Ensure IAM roles from the cluster/fargate pod roles are added to the s3 bucket policy
+
+- [ ] Instead of requesting the ecr repo url from the user, we can create it. Since we share artifacts via account replication: 
+    - for example you have this ecr_repo_url: 1234567890.dkr.ecr.us-west-2.amazonaws.com
+    - we can get the account_id and region of where the stacks are going to be deployed
+    - if the user does not provide one, we can assume what it will be and try
