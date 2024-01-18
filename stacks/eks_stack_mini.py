@@ -26,6 +26,8 @@ class EksStack(Stack):
         vpc: ec2.IVpc,
         subnets: Sequence[ec2.ISubnet],
         customer_managed_cmk: str,
+        ecr_repo_url: str,
+        customer_certificate_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -33,6 +35,7 @@ class EksStack(Stack):
         # -------------------------------------------------------------------------------------------------------------
         # IAM Roles ---------------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
+        # TODO: Implement specific IAM roles for EKS
         # control_plane_role = iam.Role(
         #     self,
         #     "EksControlPlaneRole",
@@ -58,8 +61,22 @@ class EksStack(Stack):
         # )
 
         # -------------------------------------------------------------------------------------------------------------
+        # SECURITY GROUPS ----------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        # TODO: Implement specific security groups
+
+        # -------------------------------------------------------------------------------------------------------------
+        # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        self.ecr_repo_url = ecr_repo_url
+        self.customer_certificate_arn = customer_certificate_arn
+
+        # -------------------------------------------------------------------------------------------------------------
         # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
+        # If the customer_managed_cmk is provided, we will use that value
+        # If the customer_managed_cmk is not provided, we will create a CMK key using stacks/kms.py construct with
+        # predefined configurations.
         if not customer_managed_cmk:
             self.customer_managed_cmk = create_kms_key(
                 self,
@@ -154,9 +171,22 @@ class EksStack(Stack):
             description="Security Group ID",
         )
 
+    # -------------------------------------------------------------------------------------------------------------
+
+    @property
+    def get_vpc(self) -> ec2.IVpc:
+        return self.cluster.vpc
+
+    def get_subnets(self) -> Sequence[ec2.ISubnet]:
+        return self.cluster.vpc.private_subnets
+
     @property
     def get_cluster(self) -> eks.ICluster:
         return self.cluster
+
+    @property
+    def get_cluster_name(self) -> str:
+        return self.cluster.cluster_name
 
     @property
     def get_kubectl_role_arn(self) -> str:
@@ -177,3 +207,11 @@ class EksStack(Stack):
     @property
     def get_kubectl_layer(self) -> lambda_.ILayerVersion:
         return self.cluster.kubectl_layer
+
+    @property
+    def get_ecr_url(self) -> str:
+        return self.ecr_repo_url
+
+    @property
+    def get_customer_certificate_arn(self) -> str:
+        return self.customer_certificate_arn

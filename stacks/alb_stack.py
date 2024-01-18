@@ -26,13 +26,13 @@ class AlbStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        self.vpc = vpc
-        self.ecr_repo_url = ecr_repo_url
-        self.cluster = cluster
-        self.kubectl_layer = kubectl_layer
-        self.kubectl_role_arn = kubectl_role_arn
-        self.kubectl_lambda_role = kubectl_lambda_role
-        self.open_id_connect_provider_arn = open_id_connect_provider_arn
+        # self.vpc = vpc
+        # self.ecr_repo_url = ecr_repo_url
+        # eks_cluster = cluster
+        # self.kubectl_layer = kubectl_layer
+        # self.kubectl_role_arn = kubectl_role_arn
+        # self.kubectl_lambda_role = kubectl_lambda_role
+        # self.open_id_connect_provider_arn = open_id_connect_provider_arn
 
         # -------------------------------------------------------------------------------------------------------------
         # Import KubectlProvider and EKS Cluster ----------------------------------------------------------------------
@@ -44,17 +44,19 @@ class AlbStack(Stack):
         oidc_provider = eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
             self,
             "ImportedOidcProvider",
-            open_id_connect_provider_arn=self.open_id_connect_provider_arn,
+            open_id_connect_provider_arn=open_id_connect_provider_arn,
         )
 
-        self.cluster = eks.FargateCluster.from_cluster_attributes( 
+        eks_cluster = eks.Cluster.from_cluster_attributes(
             self,
             "ImportedEksCluster",
-            cluster_name=self.cluster.cluster_name,
-            kubectl_layer=self.kubectl_layer,
-            kubectl_role_arn=self.kubectl_role_arn,
+            cluster_name=cluster.cluster_name,
+            cluster_endpoint=cluster.cluster_endpoint,
+            kubectl_layer=kubectl_layer,
+            kubectl_role_arn=kubectl_role_arn,
             kubectl_provider=kubectl_provider,
             open_id_connect_provider=oidc_provider,
+            vpc=vpc,
         )
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
@@ -66,7 +68,7 @@ class AlbStack(Stack):
         alb_service_account = eks.ServiceAccount(
             self,
             "ALBServiceAccount",
-            cluster=self.cluster,
+            cluster=eks_cluster,
             name="aws-load-balancer-controller",
             namespace="kube-system",
         )
@@ -81,20 +83,20 @@ class AlbStack(Stack):
                 alb_service_account.add_to_principal_policy(alb_policy_statement)
 
         # 3. Creates a Helm chart for the AWS Load  Balancer Controller
-        add_alb_chart = self.cluster.add_helm_chart(
+        add_alb_chart = eks_cluster.add_helm_chart(
             "aws-load-balancer-controller",
-            repository=f"oci://{self.ecr_repo_url}/aws-load-balancer-controller-helm-chart",
+            repository=f"oci://{ecr_repo_url}/aws-load-balancer-controller-helm-chart",
             chart="aws-load-balancer-controller-helm-chart",
             version="v1.6.2",
             release="aws-load-balancer-controller",
             namespace=alb_service_account.service_account_namespace,
             values={
                 "image": {
-                    "repository": f"{self.ecr_repo_url}/aws-load-balancer-controller",
+                    "repository": f"{ecr_repo_url}/aws-load-balancer-controller",
                     "tag": "v2.6.2",
                     "pullPolicy": "IfNotPresent",
                 },
-                "clusterName": self.cluster.cluster_name,
+                "clusterName": eks_cluster.cluster_name,
                 "serviceAccount": {
                     "create": False,
                     "name": alb_service_account.service_account_name,
@@ -102,7 +104,7 @@ class AlbStack(Stack):
                 "enableShield": False,
                 "enableWaf": False,
                 "enableWafv2": False,
-                "vpcId": self.vpc.vpc_id,
+                "vpcId": vpc.vpc_id,
                 "logLevel": "debug",
                 "defaultTags": {},
                 "defaultTargetType": "ip",
