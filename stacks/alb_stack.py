@@ -11,53 +11,54 @@ from constructs import Construct
 
 
 class AlbStack(Stack):
+    cluster: eks.Cluster
+    vpc: ec2.IVpc
+
     def __init__(
         self,
         scope: Construct,
         construct_id: str,
         vpc: ec2.IVpc,
         ecr_repo_url: str,
-        cluster: eks.ICluster,
-        kubectl_layer: lambda_.ILayerVersion,
-        kubectl_role_arn: str,
-        kubectl_lambda_role: str,
-        open_id_connect_provider_arn: str,
+        cluster: eks.Cluster,
+        customer_certificate_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # self.vpc = vpc
-        # self.ecr_repo_url = ecr_repo_url
-        # eks_cluster = cluster
-        # self.kubectl_layer = kubectl_layer
-        # self.kubectl_role_arn = kubectl_role_arn
-        # self.kubectl_lambda_role = kubectl_lambda_role
-        # self.open_id_connect_provider_arn = open_id_connect_provider_arn
+        # VPC is used for the ALB placement
+        self.vpc = vpc
+
+        self.ecr_repo_url = ecr_repo_url
+        self.customer_certificate_arn = customer_certificate_arn
+
+        # EKS Cluster is used throughout the stack
+        self.cluster = cluster
 
         # -------------------------------------------------------------------------------------------------------------
         # Import KubectlProvider and EKS Cluster ----------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        kubectl_provider = eks.KubectlProvider.get_or_create(
-            scope=scope, cluster=cluster
-        )
+        # kubectl_provider = eks.KubectlProvider.get_or_create(
+        #     scope=scope, cluster=cluster
+        # )
 
-        oidc_provider = eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
-            self,
-            "ImportedOidcProvider",
-            open_id_connect_provider_arn=open_id_connect_provider_arn,
-        )
+        # oidc_provider = eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
+        #     self,
+        #     "ImportedOidcProvider",
+        #     open_id_connect_provider_arn=open_id_connect_provider_arn,
+        # )
 
-        eks_cluster = eks.Cluster.from_cluster_attributes(
-            self,
-            "ImportedEksCluster",
-            cluster_name=cluster.cluster_name,
-            cluster_endpoint=cluster.cluster_endpoint,
-            kubectl_layer=kubectl_layer,
-            kubectl_role_arn=kubectl_role_arn,
-            kubectl_provider=kubectl_provider,
-            open_id_connect_provider=oidc_provider,
-            vpc=vpc,
-        )
+        # eks_cluster = eks.Cluster.from_cluster_attributes(
+        #     self,
+        #     "ImportedEksCluster",
+        #     cluster_name=cluster.cluster_name,
+        #     cluster_endpoint=cluster.cluster_endpoint,
+        #     kubectl_layer=kubectl_layer,
+        #     kubectl_role_arn=kubectl_role_arn,
+        #     kubectl_provider=kubectl_provider,
+        #     open_id_connect_provider=oidc_provider,
+        #     vpc=vpc,
+        # )
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
@@ -65,10 +66,9 @@ class AlbStack(Stack):
         # since it needs the internet to download. We source from ECR private instead.
 
         # 1. Creates and Service account for our cluster to add a load Balancer
-        alb_service_account = eks.ServiceAccount(
-            self,
+        # alb_service_account = eks.ServiceAccount(
+        alb_service_account = self.cluster.add_service_account(
             "ALBServiceAccount",
-            cluster=eks_cluster,
             name="aws-load-balancer-controller",
             namespace="kube-system",
         )
@@ -83,20 +83,20 @@ class AlbStack(Stack):
                 alb_service_account.add_to_principal_policy(alb_policy_statement)
 
         # 3. Creates a Helm chart for the AWS Load  Balancer Controller
-        add_alb_chart = eks_cluster.add_helm_chart(
+        add_alb_chart = self.cluster.add_helm_chart(
             "aws-load-balancer-controller",
-            repository=f"oci://{ecr_repo_url}/aws-load-balancer-controller-helm-chart",
+            repository=f"oci://{self.ecr_repo_url}/aws-load-balancer-controller-helm-chart",
             chart="aws-load-balancer-controller-helm-chart",
             version="v1.6.2",
             release="aws-load-balancer-controller",
             namespace=alb_service_account.service_account_namespace,
             values={
                 "image": {
-                    "repository": f"{ecr_repo_url}/aws-load-balancer-controller",
+                    "repository": f"{self.ecr_repo_url}/aws-load-balancer-controller",
                     "tag": "v2.6.2",
                     "pullPolicy": "IfNotPresent",
                 },
-                "clusterName": eks_cluster.cluster_name,
+                "clusterName": self.cluster.cluster_name,
                 "serviceAccount": {
                     "create": False,
                     "name": alb_service_account.service_account_name,
@@ -104,7 +104,7 @@ class AlbStack(Stack):
                 "enableShield": False,
                 "enableWaf": False,
                 "enableWafv2": False,
-                "vpcId": vpc.vpc_id,
+                "vpcId": self.vpc.vpc_id,
                 "logLevel": "debug",
                 "defaultTags": {},
                 "defaultTargetType": "ip",

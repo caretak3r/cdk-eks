@@ -19,6 +19,13 @@ from stacks.kms import create_kms_key
 
 
 class EksStack(Stack):
+    cluster: eks.Cluster
+    # cluster_name: str  # covered by cluster
+    # kubectl_layer: lambda_.ILayerVersion  # covered by cluster
+    # kubectl_role_arn: str  # covered by cluster
+    # kubectl_lambda_role: str  # covered by cluster
+    # open_id_connect_provider_arn: str  # covered by cluster
+
     def __init__(
         self,
         scope: Construct,
@@ -26,8 +33,6 @@ class EksStack(Stack):
         vpc: ec2.IVpc,
         subnets: Sequence[ec2.ISubnet],
         customer_managed_cmk: str,
-        ecr_repo_url: str,
-        customer_certificate_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -64,12 +69,6 @@ class EksStack(Stack):
         # SECURITY GROUPS ----------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
         # TODO: Implement specific security groups
-
-        # -------------------------------------------------------------------------------------------------------------
-        # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
-        # -------------------------------------------------------------------------------------------------------------
-        self.ecr_repo_url = ecr_repo_url
-        self.customer_certificate_arn = customer_certificate_arn
 
         # -------------------------------------------------------------------------------------------------------------
         # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
