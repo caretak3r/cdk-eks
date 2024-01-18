@@ -19,6 +19,14 @@ from stacks.kms import create_kms_key
 
 
 class BaseStack(Stack):
+    vpc: ec2.IVpc
+    subnets: Sequence[ec2.ISubnet]
+    ecr_repo_url: str
+    customer_certificate_arn: str
+    bucket: s3.Bucket
+    bucket_arn: str
+    init_cmk_key: kms.Key
+
     def __init__(
         self,
         scope: Construct,
