@@ -2,15 +2,15 @@ import os
 import json
 from aws_cdk import (
     Stack,
+    NestedStack,
     aws_ec2 as ec2,
     aws_eks as eks,
     aws_iam as iam,
-    aws_lambda as lambda_,
 )
 from constructs import Construct
 
 
-class AlbStack(Stack):
+class AlbStack(NestedStack):
     cluster: eks.Cluster
     vpc: ec2.IVpc
 

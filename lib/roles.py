@@ -4,7 +4,7 @@ from aws_cdk import (
 )
 
 
-def enable_ec2_masters_role(self):
+def add_to_masters_role(self):
     # IAM: Add IAM roles from constants to the `system:masters` group
     # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
     # FIXME: this runs successfully the first time, but fails on subsequent runs - kubectl apply AlreadyExists error
