@@ -4,6 +4,12 @@ This project uses python AWS CDK to deploy a private VPC and networking resource
 
 ---
 
+## CDK 
+
+Please read the [CDK Docs](docs/cdk.md) for more information on what CDK is and how it's being implemented in this project.
+
+---
+
 ## Deployment Control Flow
 
 Here are the inputs available to configure the CDK deployment: 
@@ -27,8 +33,6 @@ Variable Name|Description|Default Value|Required|
 `DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|
 `DEFAULT_DATABASE_NAME`|The default name of the database.|""|Optional|
 `DEFAULT_DATABASE_USERNAME`|The default username of the database.|""|Optional|
-
-
 
 ---
 
