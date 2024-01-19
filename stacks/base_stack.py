@@ -101,7 +101,7 @@ class BaseStack(Stack):
         )
         Tags.of(self.bucket).add(
             "Name",
-            f"{constants.STACK_PREFIX}-bucket-{constants.STACK_AFFIX}",
+            f"{constants.STACK_PREFIX}-bucket-{constants.STACK_SUFFIX}",
         )
         # Create a bucket policy that only allows a specific IAM role to access the bucket
         # The IAM role will be created later

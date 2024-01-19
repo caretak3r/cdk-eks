@@ -36,7 +36,7 @@ class VpcStack(Stack):
             },
         )
         Tags.of(self.vpc).add(
-            "Name", f"{constants.STACK_PREFIX}-private-vpc-{constants.STACK_AFFIX}"
+            "Name", f"{constants.STACK_PREFIX}-private-vpc-{constants.STACK_SUFFIX}"
         )
 
         # tag all subnets

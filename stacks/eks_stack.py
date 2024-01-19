@@ -67,7 +67,7 @@ class EksStack(Stack):
         self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
-            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
                 eks.ClusterLoggingTypes.AUDIT,
@@ -92,7 +92,7 @@ class EksStack(Stack):
         )
         Tags.of(self.cluster).add(
             "Name",
-            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
         )
 
         # TODO: add lib.roles function to enable ec2 masters role
