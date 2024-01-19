@@ -46,7 +46,7 @@ env = {
 base_stack = BaseStack(
     app,
     "BaseStack",
-    stack_name=f"{constants.STACK_PREFIX}-base-stack-{constants.STACK_AFFIX}",
+    stack_name=f"{constants.STACK_PREFIX}-base-stack-{constants.STACK_SUFFIX}",
     vpc_id=os.getenv("AWS_VPC_ID"),
     subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS"),
     ecr_repo_url=os.getenv("AWS_ECR_REPO_URL"),
@@ -65,7 +65,7 @@ base_stack = BaseStack(
 #     base_stack.get_vpc,
 #     base_stack.get_subnets,
 #     customer_managed_cmk=os.getenv("AWS_KMS_RDS_KEY_ARN"),
-#     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 
@@ -79,7 +79,7 @@ base_stack = BaseStack(
 #     base_stack.get_vpc,
 #     base_stack.get_subnets,
 #     customer_managed_cmk=os.getenv("AWS_KMS_EFS_KEY_ARN"),
-#     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 
@@ -95,7 +95,7 @@ base_stack = BaseStack(
 #     customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
 #     ecr_repo_url=base_stack.get_ecr_url,
 #     customer_certificate_arn=base_stack.get_customer_certificate_arn,
-#     stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 
@@ -105,7 +105,7 @@ eks_stack = EksStack(
     vpc=base_stack.vpc,
     subnets=base_stack.subnets,
     customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
-    stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
+    stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_SUFFIX}",
     **env,
 )
 eks_stack.add_dependency(base_stack)
@@ -117,7 +117,7 @@ eks_stack.add_dependency(base_stack)
 #     ecr_repo_url=base_stack.ecr_repo_url,
 #     cluster=eks_stack.cluster,
 #     customer_certificate_arn=base_stack.customer_certificate_arn,
-#     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 
@@ -128,7 +128,7 @@ alb_stack = AlbStack(
     ecr_repo_url=base_stack.ecr_repo_url,
     cluster=eks_stack.cluster,
     customer_certificate_arn=base_stack.customer_certificate_arn,
-    # stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_AFFIX}",
+    # stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
     # **env,
 )
 
@@ -153,7 +153,7 @@ alb_stack = AlbStack(
 #     kubectl_role_arn=eks_stack.get_kubectl_role_arn,
 #     kubectl_lambda_role=eks_stack.get_kubectl_lambda_role,
 #     open_id_connect_provider_arn=eks_stack.get_open_id_connect_provider_arn,
-#     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 # alb_stack.add_dependency(eks_stack)
