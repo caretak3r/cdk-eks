@@ -81,3 +81,6 @@
     - for example you have this ecr_repo_url: 1234567890.dkr.ecr.us-west-2.amazonaws.com
     - we can get the account_id and region of where the stacks are going to be deployed
     - if the user does not provide one, we can assume what it will be and try
+
+- [ ] Use constants.py file to also include other variables like the REPOs that are being shared with a user, versus hardcoding them (because they could change)
+

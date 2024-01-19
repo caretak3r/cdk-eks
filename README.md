@@ -1,8 +1,9 @@
 # eks-cdk-project
 
+## Motivation
+
 This project uses python AWS CDK to deploy a private VPC and networking resources, an EKS cluster with Fargate enabled profiles, S3 buckets, a RDS Aurora cluster, and deploys a number of helm charts to the EKS cluster. This project is intended to work in a "fully-isolated" or "air-gapped" networking environment. 
 
----
 
 ## CDK 
 
@@ -12,7 +13,7 @@ Please read the [CDK Docs](docs/cdk.md) for more information on what CDK is and 
 
 ## Deployment Control Flow
 
-Here are the inputs available to configure the CDK deployment: 
+Here are the inputs available to configure the CDK deployment (_configured in your .env file_):
 
 Variable Name|Description|Default Value|Required|
 ---|---|---|---|
@@ -38,19 +39,23 @@ Variable Name|Description|Default Value|Required|
 
 ## Getting Started
 
-1. Build and Run deployment container. 
+1. Use the `.env` template file and fill out **required** inputs and any others depending on what you are testing.
 
-From the root of the project you can run: 
+        cp .env.template .env
 
-`make dev`
+2. Build and Run deployment container. 
 
-This will build and run a container for you locally, that will trigger the entrypoint. This entrypoint is an interactive script that allows a user to input values specific to their environment. You can always say `no` which will drop you to the default shell on the container image. You can then run any `make` commands that are available in the `Makefile` or any CDK commands. The container will have all dependencies installed, built, and set up appropriately for consumption. 
+    From the root of the project you can run: 
 
-Running `make dev` will also mount the project root directory onto the container. **This is for development purposes**. You can make changes to your CDK code and test your changes by running commands on the container. This should speed up the development feedback loop. 
+        make dev
 
-2. Execute `make` commands or `CDK` commands.
+    This will build and run a container for you locally, that will trigger the entrypoint. This entrypoint is an interactive script that allows a user to input values specific to their environment. You can always say `no` which will drop you to the default shell on the container image. You can then run any `make` commands that are available in the `Makefile` or any CDK commands. The container will have all dependencies installed, built, and set up appropriately for consumption. 
 
-3. Test your changes.
+    Running `make dev` will also mount the project root directory onto the container. **This is for development purposes**. You can make changes to your CDK code and test your changes by running commands on the container. This should speed up the development feedback loop. 
+
+3. Execute `make` commands or `CDK` commands.
+
+4. Test your changes.
 
 ---
 
