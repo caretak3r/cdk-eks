@@ -36,30 +36,6 @@ class AlbStack(NestedStack):
         self.cluster = cluster
 
         # -------------------------------------------------------------------------------------------------------------
-        # Import KubectlProvider and EKS Cluster ----------------------------------------------------------------------
-        # -------------------------------------------------------------------------------------------------------------
-        # kubectl_provider = eks.KubectlProvider.get_or_create(
-        #     scope=scope, cluster=cluster
-        # )
-
-        # oidc_provider = eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
-        #     self,
-        #     "ImportedOidcProvider",
-        #     open_id_connect_provider_arn=open_id_connect_provider_arn,
-        # )
-
-        # eks_cluster = eks.Cluster.from_cluster_attributes(
-        #     self,
-        #     "ImportedEksCluster",
-        #     cluster_name=cluster.cluster_name,
-        #     cluster_endpoint=cluster.cluster_endpoint,
-        #     kubectl_layer=kubectl_layer,
-        #     kubectl_role_arn=kubectl_role_arn,
-        #     kubectl_provider=kubectl_provider,
-        #     open_id_connect_provider=oidc_provider,
-        #     vpc=vpc,
-        # )
-        # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
         # Install AWS Load Balancer Controller since we can't use the eks.Cluster construct's alb_controller option
