@@ -56,7 +56,7 @@ class EksStack(Stack):
         # )
         # Tags.of(control_plane_role).add(
         #     "Name",
-        #     f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_AFFIX}",
+        #     f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_SUFFIX}",
         # )
 
         # masters_role = iam.Role(
@@ -94,7 +94,7 @@ class EksStack(Stack):
         self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
-            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
                 eks.ClusterLoggingTypes.AUDIT,
@@ -121,7 +121,7 @@ class EksStack(Stack):
         )
         Tags.of(self.cluster).add(
             "Name",
-            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
         )
 
         # print(self.cluster.__dir__()) # This will show you all the attributes and methods available to you

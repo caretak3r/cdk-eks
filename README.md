@@ -29,7 +29,7 @@ Variable Name|Description|Default Value|Required|
 `AWS_KMS_RDS_KEY_ARN`|The ARN of the KMS key for RDS.|None|Yes|
 `STACK_STAGE`|The stage of the stack.|"alpha"|Optional|
 `STACK_PREFIX`|The prefix of the stack.|"tkp"|Optional|
-`STACK_AFFIX`|The affix of the stack.|"rev7"|Optional|
+`STACK_SUFFIX`|The affix of the stack.|"rev7"|Optional|
 `DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|
 `DEFAULT_DATABASE_NAME`|The default name of the database.|""|Optional|
 `DEFAULT_DATABASE_USERNAME`|The default username of the database.|""|Optional|
