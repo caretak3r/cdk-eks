@@ -49,9 +49,9 @@
     > No Credentials needed. Workergroup role or FargatePod role should already be provisioned with this.
 
 
-- [ ] Encrypt EKS cluster with provided KMS
+- [X] Encrypt EKS cluster with provided KMS
 
-- [ ] Encrypt all infra with provided KMS
+- [ ] Encrypt all infra with provided KMS from the customer. Ensure inputs(env) is being used instead of creating one.
 
 - [ ] Associate ACM certificate to ALB controller 
 
@@ -65,7 +65,7 @@
 
 - [ ] Final account to share images with a customer from, need lead time. 
 
-- [ ] Vertical and Horizontal scaling 
+- [ ] Vertical and Horizontal scaling via Karpenter
 
 - [ ] Pod disruption budgets set to minimize disruption during OS patching by AWS 
 
@@ -74,3 +74,13 @@
 - [ ] Implement EFS 
 
 - [ ] Use Aspects to apply configurations to constructs within a single scope 
+
+- [ ] Ensure IAM roles from the cluster/fargate pod roles are added to the s3 bucket policy
+
+- [ ] Instead of requesting the ecr repo url from the user, we can create it. Since we share artifacts via account replication: 
+    - for example you have this ecr_repo_url: 1234567890.dkr.ecr.us-west-2.amazonaws.com
+    - we can get the account_id and region of where the stacks are going to be deployed
+    - if the user does not provide one, we can assume what it will be and try
+
+- [ ] Use constants.py file to also include other variables like the REPOs that are being shared with a user, versus hardcoding them (because they could change)
+

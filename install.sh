@@ -81,11 +81,11 @@ function prompt_aws_ecr_repo_url() {
 }
 
 function prompt_aws_certificate_arn() {
-    read -p "Enter your AWS Certificate ARN (ex: arn:aws:acm:us-west-2:728168703404:certificate/d1f09e52-6a3f-4ec6-8846-592b168c4ee4): " AWS_CERTIFICATE_ARN
-    if aws acm describe-certificate --certificate-arn "$AWS_CERTIFICATE_ARN" --profile "$AWS_PROFILE" --region "$AWS_REGION" > /dev/null 2>&1; then
-        export AWS_CERTIFICATE_ARN
-        ESCAPED_AWS_CERTIFICATE_ARN=$(printf '%s\n' "$AWS_CERTIFICATE_ARN" | sed 's:[\/&]:\\&:g;$!s/$/\\/')
-        sed -i "s/^AWS_CERTIFICATE_ARN=.*/AWS_CERTIFICATE_ARN=$ESCAPED_AWS_CERTIFICATE_ARN/" .env
+    read -p "Enter your AWS Certificate ARN (ex: arn:aws:acm:us-west-2:728168703404:certificate/d1f09e52-6a3f-4ec6-8846-592b168c4ee4): " AWS_CUSTOMER_CERTIFICATE_ARN
+    if aws acm describe-certificate --certificate-arn "$AWS_CUSTOMER_CERTIFICATE_ARN" --profile "$AWS_PROFILE" --region "$AWS_REGION" > /dev/null 2>&1; then
+        export AWS_CUSTOMER_CERTIFICATE_ARN
+        ESCAPED_AWS_CUSTOMER_CERTIFICATE_ARN=$(printf '%s\n' "$AWS_CUSTOMER_CERTIFICATE_ARN" | sed 's:[\/&]:\\&:g;$!s/$/\\/')
+        sed -i "s/^AWS_CUSTOMER_CERTIFICATE_ARN=.*/AWS_CUSTOMER_CERTIFICATE_ARN=$ESCAPED_AWS_CUSTOMER_CERTIFICATE_ARN/" .env
         return 0
     else
         echo "Error: Invalid AWS Certificate ARN."

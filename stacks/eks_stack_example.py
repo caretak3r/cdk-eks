@@ -67,7 +67,7 @@ class EksStack(Stack):
         self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
-            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
                 eks.ClusterLoggingTypes.AUDIT,
@@ -92,7 +92,7 @@ class EksStack(Stack):
         )
         Tags.of(self.cluster).add(
             "Name",
-            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
         )
 
         # TODO: add lib.roles function to enable ec2 masters role
@@ -152,90 +152,6 @@ class EksStack(Stack):
         # add_dependency() method is used to add a dependency on the service_account for the helm_chart.
         # This means that the service_account will be created before the helm_chart is deployed.
         add_alb_chart.node.add_dependency(alb_service_account)
-
-        # FIXME: not sure if this needs to go before ALB or after
-        # -------------------------------------------------------------------------------------------------------------
-        # HELM CHART INSTALL: cert-manager ----------------------------------------------------------------------------
-        # -------------------------------------------------------------------------------------------------------------
-        # Install cert-manager helm chart from ECR private
-        # 1. Creates a Helm chart for the cert-manager
-        # add_cert_manager_chart = self.cluster.add_helm_chart(
-        #     "cert-manager",
-        #     repository=f"oci://{self.ecr_repo_url}/cert-manager-helm-chart",
-        #     chart="cert-manager-helm-chart",
-        #     version="v1.13.2",
-        #     release="cert-manager",
-        #     namespace="cert-manager",
-        #     values={
-        #         "installCRDs": True,
-        #         "replicaCount": 2,
-        #         "image": {
-        #             "repository": f"{self.ecr_repo_url}/cert-manager-controller",
-        #             "tag": "v1.13.2",
-        #             "pullPolicy": "IfNotPresent",
-        #         },
-        #         "webhook": {
-        #             "securePort": 10260,  # Fargate requirement
-        #             "replicaCount": 2,
-        #             "image": {
-        #                 "repository": f"{self.ecr_repo_url}/cert-manager-webhook",
-        #                 "tag": "v1.13.2",
-        #                 "pullPolicy": "IfNotPresent",
-        #             },
-        #         },
-        #         "cainjector": {
-        #             "enabled": True,
-        #             "replicaCount": 2,
-        #             "image": {
-        #                 "repository": f"{self.ecr_repo_url}/cert-manager-cainjector",
-        #                 "tag": "v1.13.2",
-        #                 "pullPolicy": "IfNotPresent",
-        #             },
-        #         },
-        #         "acemesolver": {
-        #             "enabled": False,
-        #         },
-        #         "startupapicheck": {
-        #             "enabled": False,
-        #         },
-        #         "prometheus": {
-        #             "enabled": False,
-        #         },
-        #     },
-        # )
-
-        # # Create IAM policy for Fluent Bit
-        # fluent_bit_policy = iam.Policy(
-        #     self,
-        #     "FluentBitPolicy",
-        #     statements=[
-        #         iam.PolicyStatement(
-        #             actions=["logs:CreateLogStream", "logs:PutLogEvents"],
-        #             resources=["*"],
-        #             effect=iam.Effect.ALLOW
-        #         )
-        #     ]
-        # )
-
-        # # Create service account for Fluent Bit
-        # fluent_bit_service_account = eks.ServiceAccount(
-        #     self,
-        #     "FluentBitServiceAccount",
-        #     cluster=self.cluster,
-        #     name="fluent-bit",
-        #     namespace="logging",
-        #     policies=[fluent_bit_policy]
-        # )
-
-        # # Deploy Fluent Bit manifest
-        # fluent_bit_manifest = eks.KubernetesManifest(
-        #     self,
-        #     "FluentBitManifest",
-        #     cluster=self.cluster,
-        #     manifest=[
-        #         # The Fluent Bit ConfigMap, ServiceAccount, DaemonSet, etc. go here
-        #     ]
-        # )
 
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: http-echo -------------------------------------------------------------------------------

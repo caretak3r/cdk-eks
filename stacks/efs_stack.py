@@ -42,18 +42,14 @@ class EfsStack(Stack):
             "EFSFileSystem",
             file_system_name=f"{constants.STACK_PREFIX}-efs",
             vpc=vpc,
-            kms_key="",
+            kms_key=customer_managed_cmk,
             encrypted=True,
+            performance_mode=efs.PerformanceMode.GENERAL_PURPOSE,  # default
             lifecycle_policy=efs.LifecyclePolicy.AFTER_14_DAYS,
             removal_policy=RemovalPolicy.DESTROY,
         )
 
         # Create a mount target in each private subnet
-        for index, subnet in enumerate(vpc.private_subnets, start=1):
-            efs.Mount(
-                self,
-                f"EFSMountTarget{index}",
-                file_system=self.efs_filesystem,
-                security_groups=[vpc.vpc_default_security_group],
-                subnet=subnet,
-            )
+
+        # TODO: what needs to be done to allow any fargate pod to mount a volume/
+        # more specifically only the application pods that need to mount the volume
