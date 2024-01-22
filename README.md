@@ -50,6 +50,13 @@ Running `make dev` will also mount the project root directory onto the container
 
 ---
 
+## Documents
+
+1. If you need to view resources in EKS without having to add a Federated SSO IAM Role to the cluster, please see [IAM for viewing EKS Resources](docs/viewing-eks-resources.md).
+
+
+---
+
 ## Reference Material
 
 1. [AWS CDK commands](https://github.com/aws/aws-cdk/blob/main/packages/aws-cdk/README.md)
