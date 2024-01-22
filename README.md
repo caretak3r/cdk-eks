@@ -1,52 +1,61 @@
 # eks-cdk-project
 
+## Motivation
+
 This project uses python AWS CDK to deploy a private VPC and networking resources, an EKS cluster with Fargate enabled profiles, S3 buckets, a RDS Aurora cluster, and deploys a number of helm charts to the EKS cluster. This project is intended to work in a "fully-isolated" or "air-gapped" networking environment. 
+
+
+## CDK 
+
+Please read the [CDK Docs](docs/cdk.md) for more information on what CDK is and how it's being implemented in this project.
 
 ---
 
 ## Deployment Control Flow
 
-Here are the inputs available to configure the CDK deployment: 
+Here are the inputs available to configure the CDK deployment (_configured in your .env file_):
 
-Variable Name|Description|Default Value|Required|
----|---|---|---|
-`AWS_PROFILE`|The name of the AWS profile to use from your `~/.aws/credentials` file.|None|Optional|
-`AWS_REGION`|The AWS region where resources will be deployed.|None|Yes|
-`AWS_ACCOUNT_ID`|Your AWS account ID.|None|Yes|
-`AWS_ECR_REPO_URL`|The URL of the ECR repository where images are shared with the respective AWS account.|None|Yes|
-`AWS_CERTIFICATE_ARN`|The ARN of the ACM certificate to use for the ALB.|None|Yes|
-`AWS_EKS_KMS_ARN`|The ARN for the KMS key to use to encrypt the EKS cluster.|None|Yes|
-`AWS_VPC_ID`|The ID of the VPC where the ALB and ECS cluster will be deployed.|None|Yes|
-`AWS_PRIVATE_SUBNET_IDS`|A comma-separated list of subnet IDs.|None|Yes|
-`AWS_KMS_EKS_KEY_ARN`|The ARN of the KMS key for EKS.|None|Yes|
-`AWS_KMS_EFS_KEY_ARN`|The ARN of the KMS key for EFS.|None|Yes|
-`AWS_KMS_RDS_KEY_ARN`|The ARN of the KMS key for RDS.|None|Yes|
-`STACK_STAGE`|The stage of the stack.|"alpha"|Optional|
-`STACK_PREFIX`|The prefix of the stack.|"tkp"|Optional|
-`STACK_AFFIX`|The affix of the stack.|"rev7"|Optional|
-`DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|
-`DEFAULT_DATABASE_NAME`|The default name of the database.|""|Optional|
-`DEFAULT_DATABASE_USERNAME`|The default username of the database.|""|Optional|
-
-
+Variable Name|Description|Default Value|Required|Type|
+---|---|---|---|---|
+`AWS_PROFILE`|The name of the AWS profile to use from your `~/.aws/credentials` file.|None|Optional|Customer|
+`AWS_REGION`|The AWS region where resources will be deployed.|None|Yes|Customer|
+`AWS_ACCOUNT_ID`|Your AWS account ID.|None|Yes|Customer|
+`AWS_ECR_REPO_URL`|The URL of the ECR repository where images are shared with the respective AWS account.|None|Yes|Customer|
+`AWS_CERTIFICATE_ARN`|The ARN of the ACM certificate to use for the ALB.|None|Yes|Customer|
+`AWS_INIT_KMS_ARN`|The ARN for the KMS key that the init app will use.|None|Yes|Customer|
+`DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|Customer|
+`AWS_VPC_ID`|The ID of the VPC where the ALB and ECS cluster will be deployed.|None|Yes|Customer|
+`AWS_PRIVATE_SUBNET_IDS`|A comma-separated list of subnet IDs.|None|Yes|Customer|
+`AWS_KMS_EKS_KEY_ARN`|The ARN of the KMS key for EKS.|None|Yes|Customer|
+`AWS_KMS_EFS_KEY_ARN`|The ARN of the KMS key for EFS.|None|Yes|Customer|
+`AWS_KMS_RDS_KEY_ARN`|The ARN of the KMS key for RDS.|None|Yes|Customer|
+`STACK_STAGE`|The stage of the stack.|"alpha"|Optional|Development|
+`STACK_PREFIX`|The prefix of the stack.|"tkp"|Optional|Development|
+`STACK_SUFFIX`|The affix of the stack.|"rev7"|Optional|Development|
+`DEFAULT_DATABASE_NAME`|The default name of the database.|""|Optional|Development|
+`DEFAULT_DATABASE_USERNAME`|The default username of the database.|""|Optional|Development|
 
 ---
 
 ## Getting Started
 
-1. Build and Run deployment container. 
+1. Use the `.env` template file and fill out **required** inputs and any others depending on what you are testing.
 
-From the root of the project you can run: 
+        cp .env.template .env
 
-`make dev`
+2. Build and Run deployment container. 
 
-This will build and run a container for you locally, that will trigger the entrypoint. This entrypoint is an interactive script that allows a user to input values specific to their environment. You can always say `no` which will drop you to the default shell on the container image. You can then run any `make` commands that are available in the `Makefile` or any CDK commands. The container will have all dependencies installed, built, and set up appropriately for consumption. 
+    From the root of the project you can run: 
 
-Running `make dev` will also mount the project root directory onto the container. **This is for development purposes**. You can make changes to your CDK code and test your changes by running commands on the container. This should speed up the development feedback loop. 
+        make dev
 
-2. Execute `make` commands or `CDK` commands.
+    This will build and run a container for you locally, that will trigger the entrypoint. This entrypoint is an interactive script that allows a user to input values specific to their environment. You can always say `no` which will drop you to the default shell on the container image. You can then run any `make` commands that are available in the `Makefile` or any CDK commands. The container will have all dependencies installed, built, and set up appropriately for consumption. 
 
-3. Test your changes.
+    Running `make dev` will also mount the project root directory onto the container. **This is for development purposes**. You can make changes to your CDK code and test your changes by running commands on the container. This should speed up the development feedback loop. 
+
+3. Execute `make` commands or `CDK` commands.
+
+4. Test your changes.
 
 ---
 

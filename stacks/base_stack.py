@@ -19,6 +19,14 @@ from stacks.kms import create_kms_key
 
 
 class BaseStack(Stack):
+    vpc: ec2.IVpc
+    subnets: Sequence[ec2.ISubnet]
+    ecr_repo_url: str
+    customer_certificate_arn: str
+    bucket: s3.Bucket
+    bucket_arn: str
+    init_cmk_key: kms.Key
+
     def __init__(
         self,
         scope: Construct,
@@ -26,7 +34,7 @@ class BaseStack(Stack):
         vpc_id: str,
         subnet_ids: str,
         ecr_repo_url: str,
-        certificate_arn: str,
+        customer_certificate_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -67,6 +75,8 @@ class BaseStack(Stack):
             ecr_repo_url.replace("http://", "").replace("https://", "").rstrip("/")
         )
 
+        self.customer_certificate_arn = customer_certificate_arn
+
         # -------------------------------------------------------------------------------------------------------------
         # S3 Bucket ---------------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
@@ -91,7 +101,7 @@ class BaseStack(Stack):
         )
         Tags.of(self.bucket).add(
             "Name",
-            f"{constants.STACK_PREFIX}-bucket-{constants.STACK_AFFIX}",
+            f"{constants.STACK_PREFIX}-bucket-{constants.STACK_SUFFIX}",
         )
         # Create a bucket policy that only allows a specific IAM role to access the bucket
         # The IAM role will be created later
@@ -128,6 +138,8 @@ class BaseStack(Stack):
         # -------------------------------------------------------------------------------------------------------------
         # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
+        # Create a CMK key for the InitContainer to use to encrypt data
+        # We disable key rotation since we don't want to rotate the key
         self.init_cmk_key = create_kms_key(
             self,
             "InitCmk",
@@ -161,7 +173,7 @@ class BaseStack(Stack):
         CfnOutput(
             self,
             "CertificateArn",
-            value=certificate_arn,
+            value=self.customer_certificate_arn,
             description="Certificate ARN",
         )
         CfnOutput(
@@ -193,8 +205,8 @@ class BaseStack(Stack):
 
     # TODO: if customer does not private a certificate, we will create one using the stacks/certificate.py function
     @property
-    def get_certificate_arn(self) -> str:
-        return self.certificate_arn
+    def get_customer_certificate_arn(self) -> str:
+        return self.customer_certificate_arn
 
     @property
     def get_init_cmk_key(self) -> kms.Key:

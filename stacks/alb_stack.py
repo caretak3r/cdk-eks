@@ -2,60 +2,41 @@ import os
 import json
 from aws_cdk import (
     Stack,
+    NestedStack,
+    CfnOutput,
     aws_ec2 as ec2,
     aws_eks as eks,
     aws_iam as iam,
-    aws_lambda as lambda_,
+    aws_eks as eks,
 )
 from constructs import Construct
+from lib import kubectl_helper
 
 
 class AlbStack(Stack):
+    # cluster: eks.Cluster
+    # vpc: ec2.IVpc
+
     def __init__(
         self,
         scope: Construct,
         construct_id: str,
         vpc: ec2.IVpc,
         ecr_repo_url: str,
-        cluster: eks.ICluster,
-        kubectl_layer: lambda_.ILayerVersion,
-        kubectl_role_arn: str,
-        kubectl_lambda_role: str,
-        open_id_connect_provider_arn: str,
+        eks_cluster: eks.ICluster,
+        customer_certificate_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
+        # VPC is used for the ALB placement
         self.vpc = vpc
         self.ecr_repo_url = ecr_repo_url
-        self.cluster = cluster
-        self.kubectl_layer = kubectl_layer
-        self.kubectl_role_arn = kubectl_role_arn
-        self.kubectl_lambda_role = kubectl_lambda_role
-        self.open_id_connect_provider_arn = open_id_connect_provider_arn
+        self.customer_certificate_arn = customer_certificate_arn
 
-        # -------------------------------------------------------------------------------------------------------------
-        # Import KubectlProvider and EKS Cluster ----------------------------------------------------------------------
-        # -------------------------------------------------------------------------------------------------------------
-        kubectl_provider = eks.KubectlProvider.get_or_create(
-            scope=scope, cluster=cluster
-        )
+        # Import cluster object
+        self.cluster = kubectl_helper.import_cluster(self, eks_cluster)
 
-        oidc_provider = eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
-            self,
-            "ImportedOidcProvider",
-            open_id_connect_provider_arn=self.open_id_connect_provider_arn,
-        )
-
-        self.cluster = eks.FargateCluster.from_cluster_attributes( 
-            self,
-            "ImportedEksCluster",
-            cluster_name=self.cluster.cluster_name,
-            kubectl_layer=self.kubectl_layer,
-            kubectl_role_arn=self.kubectl_role_arn,
-            kubectl_provider=kubectl_provider,
-            open_id_connect_provider=oidc_provider,
-        )
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
@@ -63,10 +44,9 @@ class AlbStack(Stack):
         # since it needs the internet to download. We source from ECR private instead.
 
         # 1. Creates and Service account for our cluster to add a load Balancer
-        alb_service_account = eks.ServiceAccount(
-            self,
+        # alb_service_account = eks.ServiceAccount(
+        alb_service_account = self.cluster.add_service_account(
             "ALBServiceAccount",
-            cluster=self.cluster,
             name="aws-load-balancer-controller",
             namespace="kube-system",
         )
@@ -82,7 +62,7 @@ class AlbStack(Stack):
 
         # 3. Creates a Helm chart for the AWS Load  Balancer Controller
         add_alb_chart = self.cluster.add_helm_chart(
-            "aws-load-balancer-controller",
+            "AlbHelmChart",
             repository=f"oci://{self.ecr_repo_url}/aws-load-balancer-controller-helm-chart",
             chart="aws-load-balancer-controller-helm-chart",
             version="v1.6.2",
@@ -111,3 +91,17 @@ class AlbStack(Stack):
         # add_dependency() method is used to add a dependency on the service_account for the helm_chart.
         # This means that the service_account will be created before the helm_chart is deployed.
         add_alb_chart.node.add_dependency(alb_service_account)
+
+        # -------------------------------------------------------------------------------------------------------------
+        # CloudFormation Outputs ---------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        CfnOutput(
+            self,
+            "ALBServiceAccountName",
+            value=alb_service_account.service_account_name,
+        )
+        CfnOutput(
+            self,
+            "ALBServiceAccountNamespace",
+            value=alb_service_account.service_account_namespace,
+        )
