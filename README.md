@@ -15,25 +15,25 @@ Please read the [CDK Docs](docs/cdk.md) for more information on what CDK is and 
 
 Here are the inputs available to configure the CDK deployment (_configured in your .env file_):
 
-Variable Name|Description|Default Value|Required|
----|---|---|---|
-`AWS_PROFILE`|The name of the AWS profile to use from your `~/.aws/credentials` file.|None|Optional|
-`AWS_REGION`|The AWS region where resources will be deployed.|None|Yes|
-`AWS_ACCOUNT_ID`|Your AWS account ID.|None|Yes|
-`AWS_ECR_REPO_URL`|The URL of the ECR repository where images are shared with the respective AWS account.|None|Yes|
-`AWS_CERTIFICATE_ARN`|The ARN of the ACM certificate to use for the ALB.|None|Yes|
-`AWS_EKS_KMS_ARN`|The ARN for the KMS key to use to encrypt the EKS cluster.|None|Yes|
-`AWS_VPC_ID`|The ID of the VPC where the ALB and ECS cluster will be deployed.|None|Yes|
-`AWS_PRIVATE_SUBNET_IDS`|A comma-separated list of subnet IDs.|None|Yes|
-`AWS_KMS_EKS_KEY_ARN`|The ARN of the KMS key for EKS.|None|Yes|
-`AWS_KMS_EFS_KEY_ARN`|The ARN of the KMS key for EFS.|None|Yes|
-`AWS_KMS_RDS_KEY_ARN`|The ARN of the KMS key for RDS.|None|Yes|
-`STACK_STAGE`|The stage of the stack.|"alpha"|Optional|
-`STACK_PREFIX`|The prefix of the stack.|"tkp"|Optional|
-`STACK_SUFFIX`|The affix of the stack.|"rev7"|Optional|
-`DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|
-`DEFAULT_DATABASE_NAME`|The default name of the database.|""|Optional|
-`DEFAULT_DATABASE_USERNAME`|The default username of the database.|""|Optional|
+Variable Name|Description|Default Value|Required|Type|
+---|---|---|---|---|
+`AWS_PROFILE`|The name of the AWS profile to use from your `~/.aws/credentials` file.|None|Optional|Customer|
+`AWS_REGION`|The AWS region where resources will be deployed.|None|Yes|Customer|
+`AWS_ACCOUNT_ID`|Your AWS account ID.|None|Yes|Customer|
+`AWS_ECR_REPO_URL`|The URL of the ECR repository where images are shared with the respective AWS account.|None|Yes|Customer|
+`AWS_CERTIFICATE_ARN`|The ARN of the ACM certificate to use for the ALB.|None|Yes|Customer|
+`AWS_INIT_KMS_ARN`|The ARN for the KMS key that the init app will use.|None|Yes|Customer|
+`DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|Customer|
+`AWS_VPC_ID`|The ID of the VPC where the ALB and ECS cluster will be deployed.|None|Yes|Customer|
+`AWS_PRIVATE_SUBNET_IDS`|A comma-separated list of subnet IDs.|None|Yes|Customer|
+`AWS_KMS_EKS_KEY_ARN`|The ARN of the KMS key for EKS.|None|Yes|Customer|
+`AWS_KMS_EFS_KEY_ARN`|The ARN of the KMS key for EFS.|None|Yes|Customer|
+`AWS_KMS_RDS_KEY_ARN`|The ARN of the KMS key for RDS.|None|Yes|Customer|
+`STACK_STAGE`|The stage of the stack.|"alpha"|Optional|Development|
+`STACK_PREFIX`|The prefix of the stack.|"tkp"|Optional|Development|
+`STACK_SUFFIX`|The affix of the stack.|"rev7"|Optional|Development|
+`DEFAULT_DATABASE_NAME`|The default name of the database.|""|Optional|Development|
+`DEFAULT_DATABASE_USERNAME`|The default username of the database.|""|Optional|Development|
 
 ---
 
