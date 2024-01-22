@@ -5,7 +5,7 @@ def get_kubectl_provider(scope, cluster) -> eks.IKubectlProvider:
     return eks.KubectlProvider.get_or_create(scope=scope, cluster=cluster)
 
 
-def get_cluster(scope, cluster) -> eks.ICluster:
+def import_cluster(scope, cluster) -> eks.ICluster:
     cluster_name = cluster.cluster_name
     kubectl_role_arn = cluster.kubectl_role.role_arn
     open_id_connect_provider_arn = (
