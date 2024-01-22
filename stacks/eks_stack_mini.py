@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, List
 from lib import constants
 from aws_cdk import (
     CfnOutput,
@@ -20,11 +20,6 @@ from stacks.kms import create_kms_key
 
 class EksStack(Stack):
     cluster: eks.Cluster
-    # cluster_name: str  # covered by cluster
-    # kubectl_layer: lambda_.ILayerVersion  # covered by cluster
-    # kubectl_role_arn: str  # covered by cluster
-    # kubectl_lambda_role: str  # covered by cluster
-    # open_id_connect_provider_arn: str  # covered by cluster
 
     def __init__(
         self,
@@ -181,7 +176,7 @@ class EksStack(Stack):
         return self.cluster.vpc.private_subnets
 
     @property
-    def get_cluster(self) -> eks.ICluster:
+    def get_cluster(self) -> eks.Cluster:
         return self.cluster
 
     @property
@@ -204,23 +199,19 @@ class EksStack(Stack):
     # def get_cluster_security_group_id(self) -> str:
     #     return self.cluster.cluster_security_group_id
 
-    @property
-    def get_kubectl_layer(self) -> lambda_.ILayerVersion:
-        return self.cluster.kubectl_layer
-
-    @property
-    def get_ecr_url(self) -> str:
-        return self.ecr_repo_url
-
-    @property
-    def get_customer_certificate_arn(self) -> str:
-        return self.customer_certificate_arn
+    # TODO: move this to our lib/utils.py or lib/helpers.py
+    def _is_valid_arn_list(self, arn_list: List[str]) -> bool:
+        if not arn_list or arn_list == [""]:
+            return False
+        if len(arn_list) > 0 and arn_list[0].startswith("arn"):
+            return True
+        return False
 
     def add_to_masters_role(self) -> None:
         # IAM: Add IAM roles from constants to the `system:masters` group
         # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
-        # FIXME: this runs successfully the first time, but fails on subsequent runs - kubectl apply AlreadyExists error
-        if constants.AUTHORIZED_ROLE_LIST:
+        if self._is_valid_arn_list(constants.AUTHORIZED_ROLE_LIST):
+            print(len(constants.AUTHORIZED_ROLE_LIST))
             for role in constants.AUTHORIZED_ROLE_LIST:
                 auth_role = iam.Role.from_role_arn(
                     self, f"ImportedIAMRole{role.split('/')[-1]}", role

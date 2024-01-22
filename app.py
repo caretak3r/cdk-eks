@@ -110,28 +110,16 @@ eks_stack = EksStack(
 )
 eks_stack.add_dependency(base_stack)
 
-# alb_stack = AlbStack(
-#     app,
-#     "AlbStack",
-#     vpc=base_stack.vpc,
-#     ecr_repo_url=base_stack.ecr_repo_url,
-#     cluster=eks_stack.cluster,
-#     customer_certificate_arn=base_stack.customer_certificate_arn,
-#     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
-#     **env,
-# )
-
 alb_stack = AlbStack(
-    eks_stack,
+    app,
     "AlbStack",
     vpc=base_stack.vpc,
     ecr_repo_url=base_stack.ecr_repo_url,
     cluster=eks_stack.cluster,
     customer_certificate_arn=base_stack.customer_certificate_arn,
-    # stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
-    # **env,
+    stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
+    **env,
 )
-
 # alb_stack.add_dependency(eks_stack)
 
 # print(f"EKS Stack Attributes: {eks_stack.__dir__()}")
