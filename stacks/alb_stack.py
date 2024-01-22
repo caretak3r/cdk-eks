@@ -33,26 +33,29 @@ class AlbStack(Stack):
         self.vpc = vpc
         self.ecr_repo_url = ecr_repo_url
         self.customer_certificate_arn = customer_certificate_arn
-        cluster_name = eks_cluster.cluster_name
-        kubectl_role_arn = eks_cluster.kubectl_role.role_arn
+        # cluster_name = eks_cluster.cluster_name
+        # kubectl_role_arn = eks_cluster.kubectl_role.role_arn
 
-        kubectl_provider = kubectl_helper.get_kubectl_provider(
-            scope=self, cluster=eks_cluster
-        )
+        # kubectl_provider = kubectl_helper.get_kubectl_provider(
+        #     scope=self, cluster=eks_cluster
+        # )
 
-        # EKS Cluster is used throughout the stack
-        self.cluster = eks.Cluster.from_cluster_attributes(
-            self,
-            "ImportedEksCluster",
-            cluster_name=cluster_name,
-            kubectl_role_arn=kubectl_role_arn,
-            open_id_connect_provider=iam.OpenIdConnectProvider.from_open_id_connect_provider_arn(
-                self,
-                "ImportedOpenIdConnectProvider",
-                open_id_connect_provider_arn=eks_cluster.open_id_connect_provider.open_id_connect_provider_arn,
-            ),
-            kubectl_provider=kubectl_provider,
-        )
+        # # EKS Cluster is used throughout the stack
+        # self.cluster = eks.Cluster.from_cluster_attributes(
+        #     self,
+        #     "ImportedEksCluster",
+        #     cluster_name=cluster_name,
+        #     kubectl_role_arn=kubectl_role_arn,
+        #     open_id_connect_provider=iam.OpenIdConnectProvider.from_open_id_connect_provider_arn(
+        #         self,
+        #         "ImportedOpenIdConnectProvider",
+        #         open_id_connect_provider_arn=eks_cluster.open_id_connect_provider.open_id_connect_provider_arn,
+        #     ),
+        #     kubectl_provider=kubectl_provider,
+        # )
+
+        # Import cluster object
+        self.cluster = kubectl_helper.import_cluster(self, eks_cluster)
 
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: aws-load-balancer-controller ------------------------------------------------------------
@@ -79,7 +82,7 @@ class AlbStack(Stack):
 
         # 3. Creates a Helm chart for the AWS Load  Balancer Controller
         add_alb_chart = self.cluster.add_helm_chart(
-            "aws-load-balancer-controller",
+            "AlbHelmChart",
             repository=f"oci://{self.ecr_repo_url}/aws-load-balancer-controller-helm-chart",
             chart="aws-load-balancer-controller-helm-chart",
             version="v1.6.2",
