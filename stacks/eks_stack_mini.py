@@ -165,6 +165,12 @@ class EksStack(Stack):
             value=self.cluster.cluster_security_group_id,
             description="Security Group ID",
         )
+        CfnOutput(
+            self,
+            "ClusterMastersRoleArn",
+            value=self.cluster.kubectl_role.role_arn,
+            description="Cluster Masters Role ARN",
+        )
 
     # -------------------------------------------------------------------------------------------------------------
 
@@ -180,8 +186,16 @@ class EksStack(Stack):
         return self.cluster
 
     @property
+    def get_eks_cluster(self) -> eks.ICluster:
+        return self.cluster
+
+    @property
     def get_cluster_name(self) -> str:
         return self.cluster.cluster_name
+
+    @property
+    def get_cluster_endpoint(self) -> str:
+        return self.cluster.cluster_endpoint
 
     @property
     def get_kubectl_role_arn(self) -> str:
@@ -190,6 +204,10 @@ class EksStack(Stack):
     @property
     def get_kubectl_lambda_role(self) -> str:
         return self.cluster.kubectl_lambda_role.role_arn
+
+    @property
+    def get_kubectl_layer(self) -> lambda_.ILayerVersion:
+        return self.cluster.kubectl_layer
 
     @property
     def get_open_id_connect_provider_arn(self) -> str:

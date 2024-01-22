@@ -49,9 +49,9 @@
     > No Credentials needed. Workergroup role or FargatePod role should already be provisioned with this.
 
 
-- [ ] Encrypt EKS cluster with provided KMS
+- [X] Encrypt EKS cluster with provided KMS
 
-- [ ] Encrypt all infra with provided KMS
+- [ ] Encrypt all infra with provided KMS from the customer. Ensure inputs(env) is being used instead of creating one.
 
 - [ ] Associate ACM certificate to ALB controller 
 
