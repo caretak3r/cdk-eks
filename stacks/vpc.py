@@ -32,7 +32,7 @@ def create_vpc(scope: Construct, construct_id: str, **kwargs) -> ec2.Vpc:
         },
     )
     Tags.of(vpc).add(
-        "Name", f"{constants.STACK_PREFIX}-private-vpc-{constants.STACK_AFFIX}"
+        "Name", f"{constants.STACK_PREFIX}-private-vpc-{constants.STACK_SUFFIX}"
     )
 
     # tag all subnets

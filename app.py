@@ -46,13 +46,14 @@ env = {
 base_stack = BaseStack(
     app,
     "BaseStack",
-    stack_name=f"{constants.STACK_PREFIX}-base-stack-{constants.STACK_AFFIX}",
+    stack_name=f"{constants.STACK_PREFIX}-base-stack-{constants.STACK_SUFFIX}",
     vpc_id=os.getenv("AWS_VPC_ID"),
     subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS"),
     ecr_repo_url=os.getenv("AWS_ECR_REPO_URL"),
-    certificate_arn=os.getenv("AWS_CERTIFICATE_ARN"),
+    customer_certificate_arn=os.getenv("AWS_CUSTOMER_CERTIFICATE_ARN"),
     **env,
 )
+# print(f"Base Stack Attributes: {base_stack.__dir__()}")
 
 # -------------------------
 # Create RDS Aurora Stack -
@@ -64,7 +65,7 @@ base_stack = BaseStack(
 #     base_stack.get_vpc,
 #     base_stack.get_subnets,
 #     customer_managed_cmk=os.getenv("AWS_KMS_RDS_KEY_ARN"),
-#     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 
@@ -78,7 +79,7 @@ base_stack = BaseStack(
 #     base_stack.get_vpc,
 #     base_stack.get_subnets,
 #     customer_managed_cmk=os.getenv("AWS_KMS_EFS_KEY_ARN"),
-#     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_AFFIX}",
+#     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_SUFFIX}",
 #     **env,
 # )
 
@@ -89,33 +90,36 @@ base_stack = BaseStack(
 eks_stack = EksStack(
     app,
     "EksStack",
-    vpc=base_stack.get_vpc,
-    subnets=base_stack.get_subnets,
+    vpc=base_stack.vpc,
+    subnets=base_stack.subnets,
     customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
-    stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_AFFIX}",
+    stack_name=f"{constants.STACK_PREFIX}-eks-stack-{constants.STACK_SUFFIX}",
     **env,
 )
+# print(f"EKS Stack Attributes: {eks_stack.__dir__()}")
+eks_stack.add_dependency(base_stack)
+
+# ---------------------
+# Create an ALB Stack -
+# ---------------------
+alb_stack = AlbStack(
+    app,
+    "AlbStack",
+    vpc=base_stack.vpc,
+    ecr_repo_url=base_stack.ecr_repo_url,
+    # eks_cluster=eks_stack.get_cluster,
+    eks_cluster=eks_stack.get_eks_cluster,
+    customer_certificate_arn=base_stack.customer_certificate_arn,
+    stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
+    **env,
+)
+# print(f"ALB Stack Attributes: {alb_stack.__dir__()}")
+# alb_stack.add_dependency(eks_stack)
+
 
 # ---------------
 # Logging Stack -
 # ---------------
-
-# -----------
-# ALB Stack -
-# -----------
-alb_stack = AlbStack(
-    app,
-    "AlbStack",
-    vpc=base_stack.get_vpc,
-    ecr_repo_url=base_stack.get_ecr_url,
-    cluster=eks_stack.get_cluster,
-    kubectl_layer=eks_stack.get_kubectl_layer,
-    kubectl_role_arn=eks_stack.get_kubectl_role_arn,
-    kubectl_lambda_role=eks_stack.get_kubectl_lambda_role,
-    open_id_connect_provider_arn=eks_stack.get_open_id_connect_provider_arn,
-    stack_name=f"{constants.STACK_PREFIX}-logging-stack-{constants.STACK_AFFIX}",
-    **env,
-)
 
 # --------------------
 # Cert Manager Stack -

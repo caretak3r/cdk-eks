@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Sequence, List
 from lib import constants
 from aws_cdk import (
     CfnOutput,
@@ -19,6 +19,8 @@ from stacks.kms import create_kms_key
 
 
 class EksStack(Stack):
+    cluster: eks.Cluster
+
     def __init__(
         self,
         scope: Construct,
@@ -33,6 +35,7 @@ class EksStack(Stack):
         # -------------------------------------------------------------------------------------------------------------
         # IAM Roles ---------------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
+        # TODO: Implement specific IAM roles for EKS
         # control_plane_role = iam.Role(
         #     self,
         #     "EksControlPlaneRole",
@@ -48,7 +51,7 @@ class EksStack(Stack):
         # )
         # Tags.of(control_plane_role).add(
         #     "Name",
-        #     f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_AFFIX}",
+        #     f"{constants.STACK_PREFIX}-eks-control-plane-role-{constants.STACK_SUFFIX}",
         # )
 
         # masters_role = iam.Role(
@@ -58,8 +61,16 @@ class EksStack(Stack):
         # )
 
         # -------------------------------------------------------------------------------------------------------------
+        # SECURITY GROUPS ----------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        # TODO: Implement specific security groups
+
+        # -------------------------------------------------------------------------------------------------------------
         # KMS/CMK Key Creation ----------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
+        # If the customer_managed_cmk is provided, we will use that value
+        # If the customer_managed_cmk is not provided, we will create a CMK key using stacks/kms.py construct with
+        # predefined configurations.
         if not customer_managed_cmk:
             self.customer_managed_cmk = create_kms_key(
                 self,
@@ -78,7 +89,7 @@ class EksStack(Stack):
         self.cluster = eks.FargateCluster(
             self,
             "EKSFargateCluster",
-            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            cluster_name=f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
             cluster_logging=[
                 eks.ClusterLoggingTypes.API,
                 eks.ClusterLoggingTypes.AUDIT,
@@ -105,9 +116,10 @@ class EksStack(Stack):
         )
         Tags.of(self.cluster).add(
             "Name",
-            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_AFFIX}",
+            f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
         )
 
+        self.add_to_masters_role()
         # print(self.cluster.__dir__()) # This will show you all the attributes and methods available to you
 
         # -------------------------------------------------------------------------------------------------------------
@@ -153,10 +165,37 @@ class EksStack(Stack):
             value=self.cluster.cluster_security_group_id,
             description="Security Group ID",
         )
+        CfnOutput(
+            self,
+            "ClusterMastersRoleArn",
+            value=self.cluster.kubectl_role.role_arn,
+            description="Cluster Masters Role ARN",
+        )
+
+    # -------------------------------------------------------------------------------------------------------------
 
     @property
-    def get_cluster(self) -> eks.ICluster:
+    def get_vpc(self) -> ec2.IVpc:
+        return self.cluster.vpc
+
+    def get_subnets(self) -> Sequence[ec2.ISubnet]:
+        return self.cluster.vpc.private_subnets
+
+    @property
+    def get_cluster(self) -> eks.Cluster:
         return self.cluster
+
+    @property
+    def get_eks_cluster(self) -> eks.ICluster:
+        return self.cluster
+
+    @property
+    def get_cluster_name(self) -> str:
+        return self.cluster.cluster_name
+
+    @property
+    def get_cluster_endpoint(self) -> str:
+        return self.cluster.cluster_endpoint
 
     @property
     def get_kubectl_role_arn(self) -> str:
@@ -167,6 +206,10 @@ class EksStack(Stack):
         return self.cluster.kubectl_lambda_role.role_arn
 
     @property
+    def get_kubectl_layer(self) -> lambda_.ILayerVersion:
+        return self.cluster.kubectl_layer
+
+    @property
     def get_open_id_connect_provider_arn(self) -> str:
         return self.cluster.open_id_connect_provider.open_id_connect_provider_arn
 
@@ -174,6 +217,45 @@ class EksStack(Stack):
     # def get_cluster_security_group_id(self) -> str:
     #     return self.cluster.cluster_security_group_id
 
-    @property
-    def get_kubectl_layer(self) -> lambda_.ILayerVersion:
-        return self.cluster.kubectl_layer
+    # TODO: move this to our lib/utils.py or lib/helpers.py
+    def _is_valid_arn_list(self, arn_list: List[str]) -> bool:
+        if not arn_list or arn_list == [""]:
+            return False
+        if len(arn_list) > 0 and arn_list[0].startswith("arn"):
+            return True
+        return False
+
+    def add_to_masters_role(self) -> None:
+        # IAM: Add IAM roles from constants to the `system:masters` group
+        # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
+        if self._is_valid_arn_list(constants.AUTHORIZED_ROLE_LIST):
+            print(len(constants.AUTHORIZED_ROLE_LIST))
+            for role in constants.AUTHORIZED_ROLE_LIST:
+                auth_role = iam.Role.from_role_arn(
+                    self, f"ImportedIAMRole{role.split('/')[-1]}", role
+                )
+                # self.cluster.aws_auth.add_role_mapping(auth_role, groups=["system:masters"])
+                self.cluster.aws_auth.add_masters_role(auth_role)
+
+                self.cluster.add_manifest(
+                    f"AdminRoleManifest{role.split('/')[-1]}",
+                    {
+                        "apiVersion": "rbac.authorization.k8s.io/v1",
+                        "kind": "ClusterRoleBinding",
+                        "metadata": {"name": "admin-role-binding"},
+                        "roleRef": {
+                            "apiGroup": "rbac.authorization.k8s.io",
+                            "kind": "ClusterRole",
+                            "name": "cluster-admin",
+                        },
+                        "subjects": [
+                            {
+                                "kind": "ServiceAccount",
+                                "name": auth_role.role_name,
+                                "namespace": "kube-system",
+                            }
+                        ],
+                    },
+                )
+        else:
+            return
