@@ -86,7 +86,7 @@ class BaseStack(Stack):
             self,
             "bucket",
             access_control=s3.BucketAccessControl.BUCKET_OWNER_FULL_CONTROL,
-            bucket_name=f"{constants.STACK_PREFIX}-bucket",
+            bucket_name=f"{constants.STACK_PREFIX}-bucket-{constants.STACK_SUFFIX}",
             encryption=s3.BucketEncryption.S3_MANAGED,
             block_public_access=s3.BlockPublicAccess.BLOCK_ALL,
             lifecycle_rules=[

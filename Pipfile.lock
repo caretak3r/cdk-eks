@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "9fa94b69c0be5f8542dbdc97790f9d449990871134a4afcd58a4d52a291b7675"
+            "sha256": "8cfa34b9226d6f39d9e5e9ee390896b8f106953122a8c7774e3483d665b0addd"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -58,11 +58,11 @@
         },
         "aws-cdk.lambda-layer-kubectl-v28": {
             "hashes": [
-                "sha256:93961e17912ddc746bbe20222d57a81c90224088843a426ccbcde3bda539742e",
-                "sha256:dc5c4d2c0f547561e7cb2352a4cbee79871b2635d784d6c5d905914ef2dbcf86"
+                "sha256:514f5f315cb7f1b8a8435d1402f1ed607dfae3460e715ace6e63db9f9e30436c",
+                "sha256:5f55da697f1f5c1e5a54e7234e38ba94c623812fa10c299a7c36f6d30ac53371"
             ],
             "index": "pypi",
-            "version": "==2.1.0"
+            "version": "==2.2.0"
         },
         "cattrs": {
             "hashes": [
@@ -102,6 +102,14 @@
                 "sha256:68416a0de76dddcdd2930d1c8ef853a743cc96c82416c4e4d3b5d901c6276dc4"
             ],
             "version": "==0.0.3"
+        },
+        "pygments": {
+            "hashes": [
+                "sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c",
+                "sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367"
+            ],
+            "index": "pypi",
+            "version": "==2.17.2"
         },
         "python-dateutil": {
             "hashes": [
