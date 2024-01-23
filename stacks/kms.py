@@ -15,12 +15,14 @@ def create_kms_key(
     key_suffix = "Key"
     key = aws_kms.Key(
         scope,
-        f"{construct_id}{key_suffix}",
+        f"{construct_id}{key_suffix}{constants.STACK_SUFFIX}",
         enable_key_rotation=enable_key_rotation,
         policy=policy_document,
     )
 
-    key.add_alias(f"alias/{constants.STACK_PREFIX}/{construct_id}{key_suffix}")
+    key.add_alias(
+        f"alias/{constants.STACK_PREFIX}/{constants.STACK_SUFFIX}/{construct_id}{key_suffix}"
+    )
 
     return key
 
