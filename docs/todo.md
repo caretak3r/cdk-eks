@@ -84,3 +84,6 @@
 
 - [ ] Use constants.py file to also include other variables like the REPOs that are being shared with a user, versus hardcoding them (because they could change)
 
+- [ ] In the interactive script, ensure we log the deploy and bootstrap commands to a logs/ directory. And ensure the stdout is still shown to the user (we want to log the debug/verbose logs in the log files)
+
+- [ ] CERTIFICATE_ARN not being captured in the .env file (look at install.sh)

@@ -136,15 +136,13 @@ function prompt_bootstrap_environment() {
     read -p "Do you want to proceed to bootstrapping the target AWS environment? [yes/no] (default: no): " proceed_bootstrap
     if [[ $proceed_bootstrap == "yes" ]]; then
         echo "Proceeding to bootstrap the target AWS environment..."
-        if make bootstrap > bootstrap.log 2>&1; then
+        if make bootstrap; then
             echo "Bootstrap successful!"
             return 0
         else
             echo "Bootstrap failed. Check bootstrap.log for details."
             echo "Printing .env file values and error message to bootstrap.log..."
-            cat .env >> bootstrap.log
-            echo "Error message from 'make bootstrap':" >> bootstrap.log
-            tail -n 5 bootstrap.log >> bootstrap.log
+            echo "Error message from 'make bootstrap'"
             return 1
         fi
     else
@@ -157,15 +155,12 @@ function prompt_deploy_environment() {
     read -p "Do you want to proceed to deploying to the target AWS environment? [yes/no] (default: no): " proceed_deploy
     if [[ $proceed_deploy == "yes" ]]; then
         echo "Proceeding to deploy the target AWS environment..."
-        if make deploy > deploy.log 2>&1; then
+        if make deploy; then
             echo "Deployment successful!"
             return 0
         else
             echo "Deployment failed. Check deploy.log for details."
             echo "Printing .env file values and error message to deploy.log..."
-            cat .env >> deploy.log
-            echo "Error message from 'make deploy':" >> deploy.log
-            tail -n 5 deploy.log >> deploy.log
             return 1
         fi
     else
@@ -237,6 +232,9 @@ function main() {
     read -p "Do you want to proceed with the interactive setup? [yes/no]: " setup_choice
     if [[ $setup_choice != "yes" ]]; then
         echo "You have chosen the manual setup. Please update the .env file before deployment."
+        if [[ ! -f .env ]]; then
+            cp .env.template .env
+        fi
         /bin/bash
     fi
 

@@ -5,9 +5,9 @@ ifneq (,$(wildcard ./.env))
 endif
 
 bootstrap:
-	cdk bootstrap --termination-protection=true --toolkit-stack-name platform-cdk-toolkit --qualifier pg --tags "managed_by=platform-cdk"
+	cdk bootstrap --termination-protection=true --toolkit-stack-name platform-cdk-toolkit --qualifier pg --tags "managed_by=platform-cdk" 2>&1 | tee logs/deploy.log
 
 deploy:
-	cdk deploy --require-approval=never --no-previous-parameters
+	cdk deploy --require-approval=never --no-previous-parameters --all 2>&1 | tee logs/deploy.log
 
-.PHONY: bootstrap synth deploy
+.PHONY: bootstrap deploy
