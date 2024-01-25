@@ -10,6 +10,7 @@ from aws_cdk import (
     aws_eks as eks,
 )
 from lib import constants
+from lib import kubectl_helper
 
 
 class CertManagerStack(Stack):
@@ -18,10 +19,8 @@ class CertManagerStack(Stack):
         scope: Construct,
         construct_id: str,
         ecr_repo_url: str,
-        cluster_name: str,
-        kubectl_role_arn: str,
+        eks_cluster: eks.ICluster,
         customer_certificate_arn: str,
-        open_id_connect_provider_arn: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
@@ -29,18 +28,8 @@ class CertManagerStack(Stack):
         self.ecr_repo_url = ecr_repo_url
         self.customer_certificate_arn = customer_certificate_arn
 
-        # EKS Cluster is used throughout the stack
-        self.cluster = eks.Cluster.from_cluster_attributes(
-            self,
-            "ImportedEksCluster",
-            cluster_name=cluster_name,
-            kubectl_role_arn=kubectl_role_arn,
-            open_id_connect_provider=eks.OpenIdConnectProvider.from_open_id_connect_provider_arn(
-                self,
-                "ImportedOpenIdConnectProvider",
-                open_id_connect_provider_arn=open_id_connect_provider_arn,
-            ),
-        )
+        # Import cluster object
+        self.cluster = kubectl_helper.import_cluster(self, eks_cluster)
 
         # -------------------------------------------------------------------------------------------------------------
         # HELM CHART INSTALL: cert-manager ----------------------------------------------------------------------------
@@ -56,7 +45,7 @@ class CertManagerStack(Stack):
             namespace="cert-manager",
             values={
                 "installCRDs": True,
-                "replicaCount": 2,
+                "replicaCount": 3,
                 "image": {
                     "repository": f"{self.ecr_repo_url}/cert-manager-controller",
                     "tag": "v1.13.2",
@@ -64,7 +53,7 @@ class CertManagerStack(Stack):
                 },
                 "webhook": {
                     "securePort": 10260,  # Fargate requirement
-                    "replicaCount": 2,
+                    "replicaCount": 3,
                     "image": {
                         "repository": f"{self.ecr_repo_url}/cert-manager-webhook",
                         "tag": "v1.13.2",
@@ -73,7 +62,7 @@ class CertManagerStack(Stack):
                 },
                 "cainjector": {
                     "enabled": True,
-                    "replicaCount": 2,
+                    "replicaCount": 3,
                     "image": {
                         "repository": f"{self.ecr_repo_url}/cert-manager-cainjector",
                         "tag": "v1.13.2",
@@ -90,4 +79,5 @@ class CertManagerStack(Stack):
                     "enabled": False,
                 },
             },
+            wait=True,
         )
