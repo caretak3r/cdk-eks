@@ -51,6 +51,7 @@ base_stack = BaseStack(
     subnet_ids=os.getenv("AWS_PRIVATE_SUBNET_IDS"),
     ecr_repo_url=os.getenv("AWS_ECR_REPO_URL"),
     customer_certificate_arn=os.getenv("AWS_CUSTOMER_CERTIFICATE_ARN"),
+    customer_apex_domain=os.getenv("AWS_CUSTOMER_APEX_DOMAIN"),
     **env,
 )
 # print(f"Base Stack Attributes: {base_stack.__dir__()}")
@@ -107,8 +108,8 @@ alb_stack = AlbStack(
     "AlbStack",
     vpc=base_stack.vpc,
     ecr_repo_url=base_stack.ecr_repo_url,
-    # eks_cluster=eks_stack.get_cluster,
-    eks_cluster=eks_stack.get_eks_cluster,
+    eks_cluster=eks_stack.cluster,
+    # eks_cluster=eks_stack.get_eks_cluster,
     customer_certificate_arn=base_stack.customer_certificate_arn,
     stack_name=f"{constants.STACK_PREFIX}-alb-stack-{constants.STACK_SUFFIX}",
     **env,

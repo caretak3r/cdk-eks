@@ -34,6 +34,16 @@ By using the `SelfSigned` issuer with `cert-manager`, we can ensure that pods co
 
 ---
 
+## Creating Certificate Resources
+
+Once a certificate is signed it will be stored in a `Secret` resource named the same as the `secretName` in the same namespace as the `Certificate` once the issuer has successfully issued the requested certificate. 
+
+> Note: If you want to create an Issuer that can be referenced by Certificate resources in all namespaces, you should create a ClusterIssuer resource and set the certificate.spec.issuerRef.kind field to ClusterIssuer.
+
+> Because certificate validation requires that root keys be distributed independently, the self-signed certificate that specifies the root certificate authority MAY be omitted from the chain, under the assumption that the remote end must already possess it in order to validate it in any case.
+
+---
+
 ## AWS EKS
 When using a custom CNI (such as Weave or Calico) on EKS, the webhook cannot be reached by cert-manager. This happens because the control plane cannot be configured to run on a custom CNI on EKS, so the CNIs differ between control plane and worker nodes.
 
