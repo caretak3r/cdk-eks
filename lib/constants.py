@@ -1,11 +1,11 @@
 import os
 
 # CFN Parameters
-STACK_STAGE = os.environ.get("STACK_STAGE", "ALPHA")
-STACK_PREFIX = os.environ.get("STACK_PREFIX", "Tkp")
-STACK_SUFFIX = os.environ.get("STACK_SUFFIX", "Rev11")
+STACK_STAGE = os.environ.get("STACK_STAGE", "alpha")
+STACK_PREFIX = os.environ.get("STACK_PREFIX", "tkp")
+STACK_SUFFIX = os.environ.get("STACK_SUFFIX", "rev11")
 STACK_MANAGED_BY = "aws-cdk"
-DEPLOY_VPC_STACK = os.environ.get("DEPLOY_VPC_STACK", "false")
+DEPLOY_VPC_STACK = os.environ.get("DEPLOY_VPC_STACK", "true")
 AUTHORIZED_ROLE_LIST = ["arn:aws:iam::728168703404:role/token-prowlers-eks-role"]
 APP_DATABASE_NAME = os.environ.get("APP_DATABASE_NAME", "")
 APP_DATABASE_USERNAME = os.environ.get("APP_DATABASE_USERNAME", "")
