@@ -8,6 +8,7 @@ from aws_cdk import (
     Fn,
     Tags,
     aws_eks as eks,
+    aws_secretsmanager as ssm,
 )
 from lib import constants
 from lib import kubectl_helper
@@ -80,4 +81,107 @@ class CertManagerStack(Stack):
                 },
             },
             wait=True,
+        )
+
+        # 2. Create self signed cluster issuer
+        self_signed_cluster_issuer = self.cluster.add_manifest(
+            "SelfSignedClusterIssuer",
+            {
+                "apiVersion": "cert-manager.io/v1",
+                "kind": "ClusterIssuer",
+                "metadata": {"name": "selfsigned-cluster-issuer"},
+                "spec": {
+                    "selfSigned": {},
+                },
+            },
+        )
+
+        # 3. Generate a secret for the customer certificate and store it in AWS Secrets Manager
+        ca_certificate_secret = ssm.Secret(
+            self,
+            "CACertificateSecret",
+            generate_secret_string=ssm.SecretStringGenerator(
+                secret_string_template='{"ca_certificate": "%s"}',
+                generate_string_key="certificate",
+                password_length=4096,
+                exclude_punctuation=True,
+            ),
+        )
+
+        # 4. Create CA Certificate using the secret
+        ca_certificate = self.cluster.add_manifest(
+            "CACertificate",
+            {
+                "apiVersion": "cert-manager.io/v1",
+                "kind": "Certificate",
+                "metadata": {"name": "ca-certificate", "namespace": "cert-manager"},
+                "spec": {
+                    "secretName": ca_certificate_secret.secret_name,
+                    "privateKey": {"algorithm": "ECDSA", "size": 256},
+                    "commonName": "tkp.internal",
+                    "subject": {
+                        "organizations": ["tkp"],
+                        "countries": ["US"],
+                        "organizationalUnits": ["tkp"],
+                    },
+                    "isCA": True,
+                    "issuerRef": {
+                        "name": "selfsigned-cluster-issuer",
+                        "kind": "ClusterIssuer",
+                        "group": "cert-manager.io",
+                    },
+                },
+            },
+        )
+
+        # 5. Create cluster issuer
+        cluster_issuer = self.cluster.add_manifest(
+            "ClusterIssuer",
+            {
+                "apiVersion": "cert-manager.io/v1",
+                "kind": "ClusterIssuer",
+                "metadata": {"name": "ca-cluster-issuer"},
+                "spec": {
+                    "ca": {
+                        "secretName": ca_certificate_secret.secret_name,
+                    },
+                },
+            },
+        )
+
+        # 6.  Create Ingress in a different namespace that should use the new cluster issuer
+        ingress = self.cluster.add_manifest(
+            "Ingress",
+            {
+                "apiVersion": "networking.k8s.io/v1",
+                "kind": "Ingress",
+                "metadata": {"name": "test-ingress", "namespace": "default"},
+                "spec": {
+                    "tls": [
+                        {
+                            "hosts": ["tkp.internal"],
+                            "secretName": "test-ingress-cert",
+                        }
+                    ],
+                    "rules": [
+                        {
+                            "host": "tkp.internal",
+                            "http": {
+                                "paths": [
+                                    {
+                                        "path": "/",
+                                        "pathType": "Prefix",
+                                        "backend": {
+                                            "service": {
+                                                "name": "test-service",
+                                                "port": {"number": 80},
+                                            }
+                                        },
+                                    }
+                                ]
+                            },
+                        }
+                    ],
+                },
+            },
         )

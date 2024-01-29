@@ -22,6 +22,7 @@ Fargate gives you less control in various ways. Not only do you not control clus
 10. pods on fargate networking requirements
 11. DNS
 12. EFS
+13. Disk
 ---
 
 1. Using cert-manager with fargate will work, so long as the webhook port is not using 10250, since kubelet listens on this. Change it to 10260. 
@@ -51,3 +52,5 @@ Fargate gives you less control in various ways. Not only do you not control clus
 11. DNS resolution and DNS hostnames must be enabled for your VPC. For more information, see Viewing and updating DNS support for your VPC.
 
 12. 
+
+13. Fargate imposes a limitation on available disk space that is not persistent. 20GB limit. 

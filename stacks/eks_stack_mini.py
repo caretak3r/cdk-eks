@@ -182,12 +182,12 @@ class EksStack(Stack):
         return self.cluster.vpc.private_subnets
 
     @property
-    def get_cluster(self) -> eks.Cluster:
+    def get_cluster(self) -> eks.ICluster:
         return self.cluster
 
-    @property
-    def get_eks_cluster(self) -> eks.ICluster:
-        return self.cluster
+    # @property
+    # def get_eks_cluster(self) -> eks.ICluster:
+    #     return self.cluster
 
     @property
     def get_cluster_name(self) -> str:
@@ -229,7 +229,6 @@ class EksStack(Stack):
         # IAM: Add IAM roles from constants to the `system:masters` group
         # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
         if self._is_valid_arn_list(constants.AUTHORIZED_ROLE_LIST):
-            print(len(constants.AUTHORIZED_ROLE_LIST))
             for role in constants.AUTHORIZED_ROLE_LIST:
                 auth_role = iam.Role.from_role_arn(
                     self, f"ImportedIAMRole{role.split('/')[-1]}", role

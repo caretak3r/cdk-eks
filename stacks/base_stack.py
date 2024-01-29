@@ -23,6 +23,7 @@ class BaseStack(Stack):
     subnets: Sequence[ec2.ISubnet]
     ecr_repo_url: str
     customer_certificate_arn: str
+    customer_apex_domain: str
     bucket: s3.Bucket
     bucket_arn: str
     init_cmk_key: kms.Key
@@ -35,6 +36,7 @@ class BaseStack(Stack):
         subnet_ids: str,
         ecr_repo_url: str,
         customer_certificate_arn: str,
+        customer_apex_domain: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -76,6 +78,8 @@ class BaseStack(Stack):
         )
 
         self.customer_certificate_arn = customer_certificate_arn
+
+        self.customer_apex_domain = customer_apex_domain
 
         # -------------------------------------------------------------------------------------------------------------
         # S3 Bucket ---------------------------------------------------------------------------------------------------
@@ -175,6 +179,12 @@ class BaseStack(Stack):
             "CertificateArn",
             value=self.customer_certificate_arn,
             description="Certificate ARN",
+        )
+        CfnOutput(
+            self,
+            "ApexDomain",
+            value=self.customer_apex_domain,
+            description="Apex Domain",
         )
         CfnOutput(
             self,
