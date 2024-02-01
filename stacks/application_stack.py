@@ -22,12 +22,14 @@ class ApplicationStack(Stack):
         ecr_repo_url: str,
         eks_cluster: eks.ICluster,
         customer_certificate_arn: str,
+        customer_apex_domain: str,
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
         self.ecr_repo_url = ecr_repo_url
         self.customer_certificate_arn = customer_certificate_arn
+        self.customer_apex_domain = customer_apex_domain
 
         # Import cluster object
         self.cluster = kubectl_helper.import_cluster(self, eks_cluster)
@@ -41,6 +43,7 @@ class ApplicationStack(Stack):
             repository=f"oci://{self.ecr_repo_url}/http-echo-helm-chart",
             chart="http-echo-helm-chart",
             version="v1.0.0",
+            release="http-echo",
             namespace="app",
             values={
                 "image": {
@@ -54,6 +57,8 @@ class ApplicationStack(Stack):
                     "readOnlyRootFilesystem": True,
                     "runAsNonRoot": True,
                 },
+                "fullnameOverride": "http-echo",
+                "podLabels": {"type": "app", "app.kubernetes.io/managed-by": "helm"},
                 "ingress": {
                     "enabled": True,
                     "className": "alb",
@@ -69,7 +74,7 @@ class ApplicationStack(Stack):
                     },
                     "hosts": [
                         {
-                            "host": "http-echo.tkp.internal",  # FIXME: this should be http-echo.{CUSTOMER_DOMAIN} from the certificate name
+                            "host": f"http-echo.{self.customer_apex_domain}",  # Using the customer domain from the certificate name
                             "paths": [
                                 {
                                     "path": "/echo",

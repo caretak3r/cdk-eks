@@ -26,7 +26,7 @@ synth:
 
 # deploy: this runs the cdk deploy command
 deploy:
-	cdk deploy --require-approval=never --no-previous-parameters --all
+	cdk deploy --require-approval=never --no-previous-parameters --all --debug --verbose
 
 # aws ecr get-login-password --region us-west-2 | docker login --username AWS --password-stdin 111111111111.dkr.ecr.us-west-2.amazonaws.com
 cdkversion:
