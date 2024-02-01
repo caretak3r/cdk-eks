@@ -17,15 +17,16 @@ Here are the inputs available to configure the CDK deployment (_configured in yo
 
 Variable Name|Description|Default Value|Required|Type|
 ---|---|---|---|---|
-`AWS_PROFILE`|The name of the AWS profile to use from your `~/.aws/credentials` file.|None|Optional|Customer|
+`AWS_PROFILE`|The name of the AWS profile to use from your `~/.aws/credentials` file.|`default`|Optional|Customer|
 `AWS_REGION`|The AWS region where resources will be deployed.|None|Yes|Customer|
 `AWS_ACCOUNT_ID`|Your AWS account ID.|None|Yes|Customer|
 `AWS_ECR_REPO_URL`|The URL of the ECR repository where images are shared with the respective AWS account.|None|Yes|Customer|
 `AWS_CERTIFICATE_ARN`|The ARN of the ACM certificate to use for the ALB.|None|Yes|Customer|
+`AWS_CUSTOMER_APEX_DOMAIN`| The customer domain that is being used in the certificate. | None | Yes | Customer|
 `AWS_INIT_KMS_ARN`|The ARN for the KMS key that the init app will use.|None|Yes|Customer|
-`DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|"true"|Optional|Customer|
-`AWS_VPC_ID`|The ID of the VPC where the ALB and ECS cluster will be deployed.|None|Yes|Customer|
-`AWS_PRIVATE_SUBNET_IDS`|A comma-separated list of subnet IDs.|None|Yes|Customer|
+`DEPLOY_VPC_STACK`|Whether to deploy the VPC stack or not.|`false`|Optional|Customer|
+`AWS_VPC_ID`|The ID of the VPC where the ALB and ECS cluster will be deployed.|None|Yes, if `DEPLOY_VPC_STACK` is `false`.|Customer|
+`AWS_PRIVATE_SUBNET_IDS`|A comma-separated list of subnet IDs.|None|Yes, if `DEPLOY_VPC_STACK` is `false`.|Customer|
 `AWS_KMS_EKS_KEY_ARN`|The ARN of the KMS key for EKS.|None|Yes|Customer|
 `AWS_KMS_EFS_KEY_ARN`|The ARN of the KMS key for EFS.|None|Yes|Customer|
 `AWS_KMS_RDS_KEY_ARN`|The ARN of the KMS key for RDS.|None|Yes|Customer|
@@ -38,6 +39,8 @@ Variable Name|Description|Default Value|Required|Type|
 ---
 
 ## Getting Started
+
+### Building CDK Image (Developer)
 
 1. Use the `.env` template file and fill out **required** inputs and any others depending on what you are testing.
 
@@ -57,12 +60,23 @@ Variable Name|Description|Default Value|Required|Type|
 
 4. Test your changes.
 
+### Executing CDK Image (Customer)
+
+
+### Input Step
+
+You can go through the interactive script or modify the `.env` file manually.
+
+
 ---
 
 ## Documents
 
 1. If you need to view resources in EKS without having to add a Federated SSO IAM Role to the cluster, please see [IAM for viewing EKS Resources](docs/viewing-eks-resources.md).
 
+2. If you want to know how to implement an Ingress point for a service deployment, please see [ALB Controller and Ingress](docs/alb.md).
+
+3. If you want to reuse the existing cluster and kubectl provider, please see [Reusing Kubectl Provider and Cluster](docs/reusing-kubectl-provider.md).
 
 ---
 
