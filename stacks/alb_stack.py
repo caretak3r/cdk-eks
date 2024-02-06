@@ -71,6 +71,7 @@ class AlbStack(Stack):
                     "tag": "v2.6.2",
                     "pullPolicy": "IfNotPresent",
                 },
+                "fullnameOverride": "aws-load-balancer-controller",
                 "clusterName": self.cluster.cluster_name,
                 "serviceAccount": {
                     "create": False,

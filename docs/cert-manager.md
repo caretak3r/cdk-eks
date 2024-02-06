@@ -2,7 +2,23 @@
 
 ## Options
 
-We looked at two options early on, and as we find out more information, `Option 2` is less likely to happen since PrivateCA actions are restricted by the customer. Ultimately `Option 1` satisifies the alpha release, but further work and considerations are needed to manage our own PKI infrastructure in the future. Alternatively a 'BYOC" (`bring your own cluster`) approach will put the responsibility of security (mTLS/TLS encryption) on the customer. In which case, a customer will assign the certificates for the product (services) to use. 
+1. AWS Private CA
+
+    Advantages = Legitimacy and trust.
+
+    Disadvantages = it belongs to the customer, they can _technically_ unecrypt all traffic by revoking or degrading the need for TLS.
+
+2. Self-Signed Certificates
+
+    Advantages = 
+
+    Disadvantages = bloat, might not _really_ be a problem we have to solve
+
+3. Terminate TLS at the pod-level, then drop to HTTP requests between pods.
+
+
+
+We looked at two options early on, and as we find out more information, `Option 2` is less likely to happen since PrivateCA actions are restricted by the customer. Ultimately `Option 1` satisifies the alpha release, but further work and considerations are needed to manage our own PKI infrastructure in the future. Alternatively a 'BYOC" (`bring your own cluster`) approach will put the responsibility of security (mTLS/TLS encryption) on the customer. In which case, a customer will assign the certificates for the product (services) to use. Another possible future-design looks like sharing the control and data planes with the customer, backed by auth0 for identity and access management, where we would configure the certificates and authorities, and customer just uses it. 
 
 ![Options](image-8.png)
 
@@ -87,6 +103,40 @@ Usage with private ACM CA: https://aws.amazon.com/about-aws/whats-new/2022/01/ac
 
 REF [SelfSigned](https://cert-manager.io/docs/configuration/selfsigned/)
 
+Important to note here is that we will be using an Issuer and not a ClusterIssuer. The main difference between the two is that an Issuer can only issue certificates within the same namespace! If you want your CA to issue certificates in other namespaces as well, you will have to use the ClusterIssuer. See the cert-manager documentation for more info about this.
+
+
 ## Best Practices
 
 Network Requirements and Network Policy: https://cert-manager.io/docs/installation/best-practice/
+
+---
+
+## Commands 
+
+`kubectl wait --for=condition=Ready=True clusterissuer selfsigned-cluster-issuer -n cert-manager`
+
+`kubectl get clusterissuers -o wide selfsigned-cluster-issuer`
+
+
+
+`kubectl wait --for=condition=Ready=True cert ca-certificate -n cert-manager`
+
+
+`kubectl wait --for=condition=Ready=True clusterissuer ca-cluster-issuer -n cert-manager`
+
+
+`kubectl wait --for=condition=Ready=True cert ca-certificate -n cert-manager`
+
+
+# Extract CA, cert, key
+kubectl get secret -n cert-manager myingress-cert -o json | jq -r  '.data["ca.crt"]' | base64 -d > ca.crt
+kubectl get secret -n cert-manager myingress-cert -o json | jq -r  '.data["tls.crt"]' | base64 -d > tls.crt
+kubectl get secret -n cert-manager myingress-cert -o json | jq -r  '.data["tls.key"]' | base64 -d > tls.key
+
+# Extract cluster issuer CA
+kubectl get secrets -n cert-manager test-ca -o json | jq -r '.data["tls.crt"]' | base64 -d > issuer.crt
+
+diff issuer.crt ca.crt && echo "Issuing CA matches Ingress CA" || echo "Issuing CA doesn't match Ingress CA"
+
+openssl verify -CAfile issuer.crt tls.crt
