@@ -38,3 +38,6 @@ cat "$DOMAIN-cert.pem" >> "$DOMAIN-fullchain.pem" ;
 
 # Upload the certificate to AWS ACM
 aws acm import-certificate --certificate fileb://"$DOMAIN-cert.pem" --private-key fileb://"$DOMAIN.pem" --certificate-chain fileb://"$DOMAIN-fullchain.pem" --profile default --region us-west-2
+
+# Upload the certificate to S3
+aws s3 sync . s3://tkp-bucket-rev11/certificates/ --exclude "*" --include "*.pem" --include "*.csr"  --profile default --region us-west-2

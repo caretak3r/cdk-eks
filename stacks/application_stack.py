@@ -59,6 +59,10 @@ class ApplicationStack(Stack):
                 },
                 "fullnameOverride": "http-echo",
                 "podLabels": {"type": "app", "app.kubernetes.io/managed-by": "helm"},
+                "labels": {
+                    "app.kubernetes.io/managed-by": "helm",
+                    "app.kubernetes.io/name": "http-echo",
+                },
                 "ingress": {
                     "enabled": True,
                     "className": "alb",
@@ -66,11 +70,12 @@ class ApplicationStack(Stack):
                         "kubernetes.io/ingress.class": "alb",
                         "alb.ingress.kubernetes.io/scheme": "internal",
                         "alb.ingress.kubernetes.io/target-type": "ip",
-                        "alb.ingress.kubernetes.io/listen-ports": '[{"HTTP": 80}, {"HTTPS": 443}]',
-                        "alb.ingress.kubernetes.io/actions.ssl-redirect": (
-                            '{"Type": "redirect", "RedirectConfig": {"Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
-                        ),
+                        "alb.ingress.kubernetes.io/listen-ports": '[{"HTTPS": 443}]',
                         "alb.ingress.kubernetes.io/certificate-arn": self.customer_certificate_arn,
+                        "cert-manager.io/cluster-issuer": "ca-cluster-issuer",
+                        # "alb.ingress.kubernetes.io/actions.ssl-redirect": (
+                        #     '{"Type": "redirect", "RedirectConfig": {"Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
+                        # ),
                     },
                     "hosts": [
                         {
@@ -85,6 +90,12 @@ class ApplicationStack(Stack):
                                     },
                                 }
                             ],
+                        }
+                    ],
+                    "tls": [
+                        {
+                            "hosts": [f"http-echo.{self.customer_apex_domain}"],
+                            "secretName": f"{constants.CA_SECRET_NAME}",
                         }
                     ],
                 },

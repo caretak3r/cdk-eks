@@ -127,7 +127,7 @@ alb_stack = AlbStack(
     **env,
 )
 # print(f"ALB Stack Attributes: {alb_stack.__dir__()}")
-# alb_stack.add_dependency(eks_stack)
+alb_stack.add_dependency(eks_stack)
 
 # --------------------------------------
 # Cert Manager Stack -------------------
@@ -139,9 +139,11 @@ cert_manager_stack = CertManagerStack(
     eks_cluster=eks_stack.cluster,
     customer_certificate_arn=base_stack.customer_certificate_arn,
     customer_apex_domain=base_stack.customer_apex_domain,
+    customer_managed_cmk=os.getenv("AWS_KMS_SM_KEY_ARN"),
     stack_name=f"{constants.STACK_PREFIX}-cert-manager-stack-{constants.STACK_SUFFIX}",
     **env,
 )
+cert_manager_stack.add_dependency(eks_stack)
 
 # --------------------------------------
 # Network Policy Stack -----------------
@@ -161,6 +163,8 @@ app_stack = ApplicationStack(
     stack_name=f"{constants.STACK_PREFIX}-application-stack-{constants.STACK_SUFFIX}",
     **env,
 )
+app_stack.add_dependency(eks_stack)
+app_stack.add_dependency(cert_manager_stack)
 
 # --------------------------------------
 # Synthesize the stacks ----------------
