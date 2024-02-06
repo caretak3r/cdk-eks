@@ -39,7 +39,12 @@ class BaseStack(Stack):
         customer_apex_domain: str,
         **kwargs,
     ) -> None:
-        super().__init__(scope, id, **kwargs)
+        super().__init__(
+            scope,
+            id,
+            description="This stack will conditionally check if a user has provided a VPC-ID and SUBNET-IDS, if so, then use the existing network to deploy to. Otherwise create the entire network layer.",
+            **kwargs,
+        )
         # -------------------------------------------------------------------------------------------------------------
         # CUSTOMER INPUTS ---------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
