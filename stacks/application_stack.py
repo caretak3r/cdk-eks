@@ -73,6 +73,10 @@ class ApplicationStack(Stack):
                         "alb.ingress.kubernetes.io/listen-ports": '[{"HTTPS": 443}]',
                         "alb.ingress.kubernetes.io/certificate-arn": self.customer_certificate_arn,
                         "cert-manager.io/cluster-issuer": "ca-cluster-issuer",
+                        # "alb.ingress.kubernetes.io/load-balancer-name": "",
+                        #"alb.ingress.kubernetes.io/healthcheck-path": "/",
+                        #"alb.ingress.kubernetes.io/success-codes": "204",
+                        
                         # "alb.ingress.kubernetes.io/actions.ssl-redirect": (
                         #     '{"Type": "redirect", "RedirectConfig": {"Protocol": "HTTPS", "Port": "443", "StatusCode": "HTTP_301"}}'
                         # ),
