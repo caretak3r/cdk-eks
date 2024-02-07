@@ -78,6 +78,8 @@ You can go through the interactive script or modify the `.env` file manually.
 
 3. If you want to reuse the existing cluster and kubectl provider, please see [Reusing Kubectl Provider and Cluster](docs/reusing-kubectl-provider.md).
 
+4. If you want to read about certificate management and anything related to TLS please see [Cert Manager and TLS process](docs/cert-manager.md)
+
 ---
 
 ## Reference Material
