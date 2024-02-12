@@ -141,41 +141,40 @@ class CertManagerStack(Stack):
                 },
             },
         )
-        # # self_signed_cluster_issuer.node.add_dependency(ca_certificate_secret)
+        self_signed_cluster_issuer.node.add_dependency(add_cert_manager_chart)
 
         # # # 4. Create CA Certificate using the secret (2)
-        # ca_certificate = self.cluster.add_manifest(
-        #     "CACertificate",
-        #     {
-        #         "apiVersion": "cert-manager.io/v1",
-        #         "kind": "Certificate",
-        #         "metadata": {"name": "selfsigned-ca", "namespace": "cert-manager"},
-        #         "spec": {
-        #             "labels": {"app.kubernetes.io/managed-by:": "helm", "ops": "cert"},
-        #             "secretName": ca_certificate_secret.secret_name,
-        #             "privateKey": {"algorithm": "ECDSA", "size": 256},
-        #             # "commonName": f"${self.customer_apex_domain}",
-        #             "commonName": "selfsigned-ca",
-        #             "subject": {
-        #                 "organizations": [
-        #                     f"{constants.STACK_PREFIX}"
-        #                 ],  # TODO: change this to something that makes sense
-        #                 "countries": ["US"],
-        #                 "organizationalUnits": [
-        #                     f"{constants.STACK_PREFIX}Engineering"
-        #                 ],  # TODO: change this to something that makes sense
-        #             },
-        #             "isCA": True,
-        #             "issuerRef": {
-        #                 "name": "selfsigned-cluster-issuer",
-        #                 "kind": "ClusterIssuer",
-        #                 "group": "cert-manager.io",
-        #             },
-        #         },
-        #     },
-        # )
+        ca_certificate = self.cluster.add_manifest(
+            "CACertificate",
+            {
+                "apiVersion": "cert-manager.io/v1",
+                "kind": "Certificate",
+                "metadata": {"name": "selfsigned-ca", "namespace": "cert-manager"},
+                "spec": {
+                    "secretName": f"{constants.CA_SECRET_NAME}",
+                    "privateKey": {"algorithm": "ECDSA", "size": 256},
+                    # "commonName": f"${self.customer_apex_domain}",
+                    "commonName": "selfsigned-ca",
+                    "subject": {
+                        "organizations": [
+                            f"{constants.STACK_PREFIX}"
+                        ],  # TODO: change this to something that makes sense
+                        "countries": ["US"],
+                        "organizationalUnits": [
+                            f"{constants.STACK_PREFIX}-engineering"
+                        ],  # TODO: change this to something that makes sense
+                    },
+                    "isCA": True,
+                    "issuerRef": {
+                        "name": "selfsigned-cluster-issuer",
+                        "kind": "ClusterIssuer",
+                        "group": "cert-manager.io",
+                    },
+                },
+            },
+        )
         # ca_certificate.node.add_dependency(ca_certificate_secret)
-        # # ca_certificate.node.add_dependency(add_cert_manager_chart)
+        ca_certificate.node.add_dependency(add_cert_manager_chart)
 
         # # # 5. Create cluster issuer
         # cluster_issuer = self.cluster.add_manifest(
@@ -190,7 +189,7 @@ class CertManagerStack(Stack):
         #         },
         #         "spec": {
         #             "ca": {
-        #                 "secretName": ca_certificate_secret.secret_name,
+        #                 "secretName": f"{constants.CA_SECRET_NAME}",
         #             },
         #         },
         #     },

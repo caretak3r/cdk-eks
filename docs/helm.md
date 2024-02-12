@@ -1,51 +1,79 @@
-# Helm 
+# Helm
 
-We will host images and helm charts in ECR. 
+There will be some helm packages that will need to be maintained, built repeatedly, and distributed to our OCI registries. 
 
-We want to install some helm projects: 
-    - aws-load-balancer-controller
-    - kubeview
-    - cert-manager
+1. aws-load-balancer-controller (daemonset)
+2. cert-manager (daemonset)
+3. secrets-service-broker (sidecar container)
+4. tokenapp-init (init container)
+5. tokenapp-main 
+6. tokenapp-db-init (init container)
+7. karpenter (daemonset)
+8. fluent-bit (daemonset)
+9. otel-collector (daemonset)
+10. metrics-server (daemonset)
 
-Hosting in ECR looks like this: ![Alt text](image-4.png)
+Optional: 
 
+1. kubernetes-dashboard
+2. hashicorp vault
 
----
+## aws-load-balancer-controller
 
-        # -------------------------------------------------------------------------------------------------------------
-        # HELM CHART INSTALL: ingress-nginx ---------------------------------------------------------------------------
-        # -------------------------------------------------------------------------------------------------------------
-        add_ingress_nginx_chart = self.cluster.add_helm_chart(
-            "ingress-nginx",
-            repository=f"oci://{self.ecr_repo_url}/ingress-nginx-helm-chart",
-            chart="ingress-nginx-helm-chart",
-            version="v4.8.3",
-            release="ingress-nginx",
-            namespace="ingress-nginx",
-            values={
-                "controller": {
-                    "image": {
-                        "registry": f"{self.ecr_repo_url}",
-                        "repository": "ingress-nginx-controller",
-                        "tag": "v1.9.4",
-                        "pullPolicy": "IfNotPresent",
-                    },
-                    "service": {
-                        "annotations": {
-                            "alb.ingress.kubernetes.io/load-balancer-name": "ingress",
-                            "alb.ingress.kubernetes.io/target-type": "ip",
-                            "alb.ingress.kubernetes.io/scheme": "internal",
-                            "service.beta.kubernetes.io/aws-load-balancer-ssl-cert": self.certificate_arn,
-                            "service.beta.kubernetes.io/aws-load-balancer-backend-protocol": "http",
-                            "service.beta.kubernetes.io/aws-load-balancer-ssl-ports": "https",
-                            "service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout": "3600",
-                            "service.beta.kubernetes.io/aws-load-balancer-ssl-negotiation-policy": "ELBSecurityPolicy-TLS13-1-2-2021-06",
-                        },
-                        "targetPorts": {
-                            "http": "http",
-                            "https": "http",
-                        },
-                    },
-                },
-            },
-        )
+#### Helm Repository:
+
+#### Docker Image: 
+
+## cert-manager
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## secrets-service-broker
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## tokenapp-init
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## tokenapp-main
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## tokenapp-db-init
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## karpenter
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## fluent-bit
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## otel-collector
+
+#### Helm Repository:
+
+#### Docker Image: 
+
+## metrics-server
+
+#### Helm Repository:
+
+#### Docker Image: 
