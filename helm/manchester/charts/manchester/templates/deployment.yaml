@@ -1,0 +1,94 @@
+---
+# Source: manchester/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: manchester
+  name: manchester-deployment
+  labels:
+    app.kubernetes.io/component: main
+    app.kubernetes.io/instance: manchester
+    app.kubernetes.io/name: manchester-main-app
+    app.kubernetes.io/version: v1.16.0
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      helm.sh/chart: manchester-0.1.0
+      app.kubernetes.io/name: manchester
+      app.kubernetes.io/instance: release-name
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/part-of: manchester
+      app.kubernetes.io/version: v1.16.0
+  template:
+    metadata:
+      labels:
+        helm.sh/chart: manchester-0.1.0
+        helm.sh/chart: manchester-0.1.0
+        app.kubernetes.io/name: manchester
+        app.kubernetes.io/instance: release-name
+        app.kubernetes.io/managed-by: Helm
+        app.kubernetes.io/part-of: manchester
+        app.kubernetes.io/version: v1.16.0
+        app.kubernetes.io/version: "v1.16.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: manchester-scva
+      securityContext:
+        fsGroup: 2001
+      initContainers:
+        - env:
+          - name: DATABASE_CONNECTION_STRING
+            value: postgres://postgres:postgres@postgres:5432/postgres
+          - name: PGUSERNAME
+            value: postgres
+          - name: PGPASSWORD
+            value: postgres
+          - name: COMMAND
+            value: 'manchester(db-init)): initializing database requirements...'
+          image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+          imagePullPolicy: IfNotPresent
+          name: manchester-db-init
+        - env:
+          - name: COMMAND
+            value: 'manchester(app-init): initializing application requirements...'
+          image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+          imagePullPolicy: IfNotPresent
+          name: manchester-app-init
+      containers:
+        - env:
+          - name: EXPOSED_PORT
+            value: "6666"
+          - name: COMMAND
+            value: 'manchester(secrets-service): initializing secrets service requirements...'
+          image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+          imagePullPolicy: IfNotPresent
+          name: manchester-secrets-service-sidecar
+          ports:
+          - containerPort: 6666
+            name: http
+            protocol: TCP
+        - name: manchester
+          securityContext:
+            capabilities:
+              drop:
+              - ALL
+            readOnlyRootFilesystem: true
+            runAsNonRoot: true
+            runAsUser: 1001
+          image: "111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest"
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: http
+          readinessProbe:
+            httpGet:
+              path: /
+              port: http
+          resources:
+            {}

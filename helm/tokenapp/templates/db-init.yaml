@@ -1,0 +1,34 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-init
+  labels:
+    app: db-init
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: db-init
+  template:
+    metadata:
+      labels:
+        app: db-init
+    spec:
+      containers:
+      - name: db-init-container
+        image: "{{ .Values.dbInitImage }}"
+        command: ["/bin/sh", "-c", "{{ .Values.dbInitCommand }}"]
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-init-service
+spec:
+  selector:
+    app: db-init
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 9376

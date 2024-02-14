@@ -1,0 +1,148 @@
+# Default values for manchester.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+name: manchester
+namespace: manchester
+deployment:
+  name: manchester-deployment
+
+image:
+  repository: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base
+  tag: latest
+  pullPolicy: IfNotPresent
+
+imagePullSecrets: []
+fullnameOverride: ""
+nameOverride: ""
+
+podAnnotations: {}
+podLabels: {}
+
+podSecurityContext:
+  fsGroup: 2001
+
+securityContext:
+  capabilities:
+    drop:
+    - ALL
+  readOnlyRootFilesystem: true
+  runAsNonRoot: true
+  runAsUser: 1001
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 0.125
+  #   memory: 50Mi
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  className: "alb"
+  annotations:
+    kubernetes.io/ingress.class: "alb"
+    alb.ingress.kubernetes.io/scheme: "internal"
+    alb.ingress.kubernetes.io/target-type: "ip"
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
+    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:111111111111:certificate/aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
+  hosts:
+    - host: manchester.tkp.internal
+      paths:
+        - path: /app
+          pathType: Exact
+  tls: []
+
+manchester:
+  replicaCount: 1
+  metadata:
+    description: "Manchester is a microservice application that provides a RESTful API for tokenizing secrets."
+    labels:
+      #helm.sh/chart: manchester-0.1.0
+      app.kubernetes.io/component: main
+      app.kubernetes.io/instance: manchester
+      #app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: manchester-main-app
+      app.kubernetes.io/version: "v1.16.0"
+  env:
+    - name: EXPOSED_PORT
+      value: "8080"
+    - name: COMMAND
+      value: "manchester(main): initializing main application..."
+  ports:
+    - name: http-main
+      containerPort: 8080
+      protocol: TCP
+  serviceAccount:
+    create: true
+    automount: true
+    annotations: {}
+    name: "manchester-scva"
+  extraArgs: []
+  annotations: {}
+  initContainers:
+    - name: manchester-db-init
+      image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: DATABASE_CONNECTION_STRING
+          value: "postgres://postgres:postgres@postgres:5432/postgres"
+        - name: PGUSERNAME
+          value: "postgres"
+        - name: PGPASSWORD
+          value: "postgres"
+        - name: COMMAND
+          value: "manchester(db-init)): initializing database requirements..."
+      # command:
+      #   - "sh"
+      #   - "-c"
+      #   - psql -h postgres -U postgres -c "CREATE DATABASE manchester;"
+    - name: manchester-app-init
+      image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: COMMAND
+          value: "manchester(app-init): initializing application requirements..."
+  sidecarContainers:
+    - name: manchester-secrets-service-sidecar
+      image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+      imagePullPolicy: IfNotPresent
+      env:
+        - name: EXPOSED_PORT
+          value: "6666"
+        - name: COMMAND
+          value: "manchester(secrets-service): initializing secrets service requirements..."
+      ports:
+        - name: http
+          containerPort: 6666
+          protocol: TCP
+          #targetPort: http
+
+
+# Additional volumes on the output Deployment definition.
+volumes: []
+# - name: foo
+#   secret:
+#     secretName: mysecret
+#     optional: false
+
+# Additional volumeMounts on the output Deployment definition.
+volumeMounts: []
+# - name: foo
+#   mountPath: "/etc/foo"
+#   readOnly: true
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
