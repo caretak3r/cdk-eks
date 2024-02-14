@@ -1,0 +1,30 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-sidecar
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-sidecar
+  template:
+    metadata:
+      labels:
+        app: app-sidecar
+    spec:
+      containers:
+      - name: app-sidecar
+        image: "{{ .Values.appSidecarImage }}"
+        command: ["python", "-c", "{{ .Values.appSidecarCommand }}"]
+---
+kind: Service
+apiVersion: v1
+metadata:
+  name: app-sidecar-service
+spec:
+  selector:
+    app: app-sidecar
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
