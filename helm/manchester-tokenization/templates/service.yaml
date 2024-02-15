@@ -1,0 +1,32 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: manchester-secret-service
+  namespace: manchester
+  labels:
+    name: manchester-secret-service
+spec:
+  ports:
+    - port: 5000
+      protocol: TCP
+      targetPort: 5000
+  type: ClusterIP
+  selector:
+    app: secret-service-deployment
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: manchester-service
+  namespace: manchester
+  labels:
+    name: manchester-service
+spec:
+  ports:
+    - port: 80
+      protocol: TCP
+      targetPort: 5001
+  type: ClusterIP
+  selector:
+    app: manchester-deployment

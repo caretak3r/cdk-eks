@@ -79,9 +79,7 @@ manchester:
     - name: COMMAND
       value: "manchester(main): initializing main application..."
   ports:
-    - name: http-main
-      containerPort: 8080
-      protocol: TCP
+    - containerPort: 8080
   serviceAccount:
     create: true
     automount: true
@@ -101,7 +99,7 @@ manchester:
         - name: PGPASSWORD
           value: "postgres"
         - name: COMMAND
-          value: "manchester(db-init)): initializing database requirements..."
+          value: "manchester(db-init): initializing database requirements..."
       # command:
       #   - "sh"
       #   - "-c"
@@ -122,11 +120,7 @@ manchester:
         - name: COMMAND
           value: "manchester(secrets-service): initializing secrets service requirements..."
       ports:
-        - name: http
-          containerPort: 6666
-          protocol: TCP
-          #targetPort: http
-
+        - containerPort: 6666
 
 # Additional volumes on the output Deployment definition.
 volumes: []

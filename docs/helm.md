@@ -15,12 +15,13 @@ There will be some helm packages that will need to be maintained, built repeated
 
 Optional: 
 
-1. kubernetes-dashboard
-2. hashicorp vault
+1. hashicorp vault
 
 ---
 
 ## Init Containers
+
+We specifically use init-containers in order to do some preparation work such as database initializations, and application-specific steps. These containers **MUST** complete successfully before proceeding to the next deployments, due to the requires the application has. 
 
 ### Why Do We Use Init Containers?
 
@@ -31,6 +32,8 @@ Dependencies: Sometimes, your app needs other services to be ready, like a datab
 Delaying Start: You might want to wait for something to be ready, like an external service. Init containers help delay your app’s start until it’s the right time.
 
 If you specify multiple init containers for a Pod, kubelet runs each init container sequentially. Each init container must succeed before the next can run. When all of the init containers have run to completion, kubelet initializes the application containers for the Pod and runs them as usual.
+
+When it comes to **Kubernetes Jobs** however, jobs are utilized for executing batch processes that complete their run, while Init Containers are employed to perform a specific task before the main container is launched. **Init Containers are a part of the Pod's lifecycle, whereas K8s Jobs creates a new pod for each execution.**
 
 ### Common Scenarios for Init Containers:
 
@@ -98,3 +101,4 @@ In the context of the projects listed in the directory, each project (like `aws-
 | fluent-bit | | | | 
 | otel-collector | | | | 
 | metrics-server | | | | 
+| vault | | | | Optional |
