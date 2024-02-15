@@ -45,7 +45,7 @@ spec:
           - name: PGPASSWORD
             value: postgres
           - name: COMMAND
-            value: 'manchester(db-init)): initializing database requirements...'
+            value: 'manchester(db-init): initializing database requirements...'
           image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
           imagePullPolicy: IfNotPresent
           name: manchester-db-init
@@ -66,8 +66,6 @@ spec:
           name: manchester-secrets-service-sidecar
           ports:
           - containerPort: 6666
-            name: http
-            protocol: TCP
         - name: manchester
           securityContext:
             capabilities:
@@ -82,13 +80,13 @@ spec:
             - name: http
               containerPort: 8080
               protocol: TCP
-          livenessProbe:
-            httpGet:
-              path: /
-              port: http
-          readinessProbe:
-            httpGet:
-              path: /
-              port: http
+          # livenessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
+          # readinessProbe:
+          #   httpGet:
+          #     path: /
+          #     port: http
           resources:
             {}
