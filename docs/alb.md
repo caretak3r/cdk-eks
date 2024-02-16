@@ -64,6 +64,58 @@ spec:
 ```
 
 ## Services: Creating the ingress
+## Istio Ingress Gateway as an Alternative
+
+In addition to traditional Ingress controllers, Istio Ingress Gateway offers a powerful and flexible way to manage ingress traffic into your Kubernetes cluster. It allows for more granular control over traffic routing and security, including support for mTLS. Istio Ingress Gateway integrates seamlessly with AWS Load Balancers, providing a secure and scalable entry point for your applications.
+
+For configuring Istio Ingress Gateway, refer to our [Istio Setup Guide](docs/istio-setup.md).
+## Example: Integrating Istio Ingress Gateway with AWS Load Balancers
+
+To securely route external traffic to internal services using Istio Ingress Gateway, you need to create Istio `Gateway` and `VirtualService` resources. This setup allows you to leverage Istio's advanced traffic management and security features, including mTLS.
+
+Here's an example of how to configure an Istio Gateway and VirtualService for an application:
+
+```yaml
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: myapp-gateway
+  namespace: default
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "my.example.com"
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: myapp
+  namespace: default
+spec:
+  hosts:
+  - "my.example.com"
+  gateways:
+  - myapp-gateway
+  http:
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
+        host: service-a
+        port:
+          number: 80
+```
+
+This configuration creates an Istio Gateway that listens on port 80 for traffic to `my.example.com` and routes it to the `service-a` Kubernetes service. The `VirtualService` defines the actual routing logic based on HTTP paths or other match conditions.
+
+For more detailed instructions on setting up Istio Ingress Gateway, refer to the [Istio Setup Guide](docs/istio-setup.md).
 
 Something like this can be used to apply the annotations to create an ingress on the ALB: 
 
