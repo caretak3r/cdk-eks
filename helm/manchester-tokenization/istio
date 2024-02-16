@@ -1,0 +1,49 @@
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: default
+spec:
+  mtls:
+    mode: STRICT
+```
+
+Path: helm/manchester-tokenization/istio/access-control.yaml
+
+```yaml
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: default-access-policy
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: myapp
+  action: ALLOW
+  rules:
+  - to:
+    - operation:
+        methods: ["GET", "POST"]
+    when:
+    - key: request.auth.principal
+      values: ["cluster.local/ns/default/sa/myapp-service-account"]
+```
+
+Path: helm/manchester-tokenization/istio/README.md
+
+```
+# Istio Service Mesh Configuration for Manchester Tokenization
+
+This directory contains Istio-specific Kubernetes resource definitions for configuring the service mesh, including mutual TLS (mTLS) policies and access control.
+
+## Applying Configurations
+
+To apply the mTLS and access control configurations to your Kubernetes cluster, use the following commands:
+
+```bash
+kubectl apply -f mtls-enable.yaml
+kubectl apply -f access-control.yaml
+```
+
+These commands deploy the configurations to enforce strict mTLS across the service mesh and define access control policies based on service identities and request attributes.
