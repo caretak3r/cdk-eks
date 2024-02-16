@@ -94,6 +94,7 @@ By using the `SelfSigned` issuer with `cert-manager`, we can ensure that pods co
 REF [SelfSigned](https://cert-manager.io/docs/configuration/selfsigned/)
 
 Important to note here is that we will be using an Issuer and not a ClusterIssuer. The main difference between the two is that an Issuer can only issue certificates within the same namespace! If you want your CA to issue certificates in other namespaces as well, you will have to use the ClusterIssuer. See the cert-manager documentation for more info about this.
+> Additionally, integrating Istio into our Kubernetes cluster enhances security and supports seamless mTLS configuration across services. Istio, in conjunction with Cert-Manager, simplifies certificate management within the service mesh, enabling automatic certificate rotation and streamlined mTLS setup. For detailed instructions on setting up Istio, refer to the [Istio Setup Documentation](docs/istio-setup.md).
 
 ---
 
