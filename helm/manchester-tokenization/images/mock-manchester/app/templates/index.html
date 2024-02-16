@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>My App</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+
+<body>
+    <h1>Mock Manchester</h1>
+    <p>This App is making requests to secrets sidecar on localhost:5000</p>
+    <button id="button1">Button 1</button>
+    <div id="responseBox"></div>
+
+    <script>
+        $(document).ready(function () {
+            $('#button1').click(function () {
+                $.get("/button1", function (data) {
+                    $('#responseBox').html(data.message);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

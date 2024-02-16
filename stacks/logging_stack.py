@@ -25,6 +25,7 @@ class LoggingStack(Stack):
     ) -> None:
         super().__init__(scope, id, **kwargs)
 
+        # Import cluster object
         self.cluster = kubectl_helper.import_cluster(self, eks_cluster)
 
         logging_namespace = self.cluster.add_manifest(
@@ -82,7 +83,7 @@ class LoggingStack(Stack):
                 "data": {
                     "flb_log_cw": "false",
                     "filters.conf": "[FILTER]\n     Name parser\n     Match *\n     Key_name log\n     Parser crio\n[FILTER]\n     Name kubernetes\n     Match kube.*\n     Merge_Log On\n     Keep_Log Off\n     Buffer_Size 0\n     Kube_Meta_Cache_TTL 300s\n",
-                    "output.conf": f"[OUTPUT]\n     Name cloudwatch_logs\n     Match kube.*\n     region {self.region}\n    log_group_name cdk-cloudwatch-logs\n     log_stream_prefix {self.cluster.cluster_name}\n     log_retention_days 60\n     auto_create_group true\n[OUTPUT]\n     Name cloudwatch_logs\n     Match *alb*\n     region {self.region}\n     log_group_name alb-cdk-cloudwatch-logs\n     log_stream_prefix {self.cluster.cluster_name}\n     log_retention_days 60\n     auto_create_group true\n",
+                    "output.conf": f"[OUTPUT]\n     Name cloudwatch_logs\n     Match kube.*\n     region {self.region}\n    log_group_name cdk-cloudwatch-logs\n     log_stream_prefix {self.cluster.cluster_name}\n     log_retention_days 60\n     auto_create_group true\n[OUTPUT]\n     Name cloudwatch_logs\n     Match *alb*\n     region {self.region}\n     log_group_name alb-cdk-cloudwatch-logs\n     log_stream_prefix {self.cluster.cluster_name}\n     log_retention_days 60\n     auto_create_group true\n[OUTPUT]\n     Name cloudwatch_logs\n     Match *cert*\n     region {self.region}\n     log_group_name alb-cdk-cloudwatch-logs\n     log_stream_prefix {self.cluster.cluster_name}\n     log_retention_days 60\n     auto_create_group true\n",
                     "parsers.conf": "[PARSER]\n     Name crio\n     Format Regex\n     Regex ^(?<time>[^ ]+) (?<stream>stdout|stderr) (?<logtag>P|F) (?<log>.*)$\n   Time_Key time\n     Time_Format %Y-%m-%dT%H:%M:%S.%L%z\n     Time_Keep On\n     Decode_Field_As escaped_utf8 log\n     Decode_Field_As json log\n",
                 },
             },

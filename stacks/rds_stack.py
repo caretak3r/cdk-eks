@@ -120,14 +120,14 @@ class RdsStack(Stack):
                 "writer",
                 publicly_accessible=False,
                 instance_type=ec2.InstanceType.of(
-                    ec2.InstanceClass.M7G, ec2.InstanceSize.LARGE
+                    ec2.InstanceClass.M6G, ec2.InstanceSize.LARGE
                 ),
             ),
             readers=[
                 rds.ClusterInstance.provisioned(
                     "reader",
                     instance_type=ec2.InstanceType.of(
-                        ec2.InstanceClass.M5, ec2.InstanceSize.LARGE
+                        ec2.InstanceClass.M6G, ec2.InstanceSize.LARGE
                     ),
                 )
             ],

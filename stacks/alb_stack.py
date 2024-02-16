@@ -14,9 +14,6 @@ from lib import kubectl_helper
 
 
 class AlbStack(Stack):
-    # cluster: eks.Cluster
-    # vpc: ec2.IVpc
-
     def __init__(
         self,
         scope: Construct,
@@ -29,7 +26,7 @@ class AlbStack(Stack):
     ) -> None:
         super().__init__(scope, construct_id, **kwargs)
 
-        # VPC is used for the ALB placement
+        # Input variables
         self.vpc = vpc
         self.ecr_repo_url = ecr_repo_url
         self.customer_certificate_arn = customer_certificate_arn
@@ -74,6 +71,7 @@ class AlbStack(Stack):
                     "tag": "v2.6.2",
                     "pullPolicy": "IfNotPresent",
                 },
+                "fullnameOverride": "aws-load-balancer-controller",
                 "clusterName": self.cluster.cluster_name,
                 "serviceAccount": {
                     "create": False,
