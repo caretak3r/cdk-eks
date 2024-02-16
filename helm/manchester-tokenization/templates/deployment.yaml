@@ -1,0 +1,55 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: manchester-deployment
+  namespace: manchester
+  labels:
+    app: manchester-deployment
+    app.kubernetes.io/instance: manchester
+    app.kubernetes.io/part-of: manchester
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: manchester-deployment
+  template:
+    metadata:
+      labels:
+        app: manchester-deployment
+        app.kubernetes.io/instance: manchester
+        app.kubernetes.io/part-of: manchester
+    spec:
+      containers:
+      - name: manchester
+        image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/mock-manchester:0.2.0
+        ports:
+        - containerPort: 5001
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: secret-service-deployment
+  namespace: manchester
+  labels:
+    app: secret-service-deployment
+    app.kubernetes.io/instance: manchester
+    app.kubernetes.io/part-of: manchester
+    meta.helm.sh/release-name: manchester
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: secret-service-deployment
+  template:
+    metadata:
+      labels:
+        app: secret-service-deployment
+        app.kubernetes.io/instance: manchester
+        app.kubernetes.io/part-of: manchester
+    spec:
+      containers:
+      - name: secret-service
+        image: 111111111111.dkr.ecr.us-west-2.amazonaws.com/secrets-service:0.2.0
+        ports:
+        - containerPort: 5000

@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-init-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-init
+  template:
+    metadata:
+      labels:
+        app: app-init
+    spec:
+      containers:
+      - name: app-init
+        image: "{{ .Values.appInitImage }}"
+        command: ["python", "-c"]
+        args: ["{{ .Values.appInitCommand }}"]
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-init-service
+spec:
+  selector:
+    app: app-init
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

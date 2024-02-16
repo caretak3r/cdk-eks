@@ -4,9 +4,9 @@ verify_ssl = true
 name = "pypi"
 
 [packages]
-aws-cdk-lib = "2.122.0"
+aws-cdk-lib = "2.124.0"
 constructs = "*"
-python-dotenv = "*"
+python-dotenv = "1.0.0"
 "aws-cdk.lambda-layer-kubectl-v28" = "*"
 
 [dev-packages]

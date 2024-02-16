@@ -20,6 +20,7 @@ from stacks.kms import create_kms_key
 
 class EksStack(Stack):
     cluster: eks.Cluster
+    # default_pod_execution_role: iam.IRole
 
     def __init__(
         self,
@@ -119,13 +120,48 @@ class EksStack(Stack):
             f"{constants.STACK_PREFIX}-eks-fargate-cluster-{constants.STACK_SUFFIX}",
         )
 
+        # TODO: add a flag to enable this or disable
         self.add_to_masters_role()
         # print(self.cluster.__dir__()) # This will show you all the attributes and methods available to you
 
         # -------------------------------------------------------------------------------------------------------------
+        # FARGATE PROFILES --------------------------------------------------------------------------------------------
+        # -------------------------------------------------------------------------------------------------------------
+        # self.default_pod_execution_role
+
+        # # Create a Fargate Profiles for cert-manager
+        cert_manager_fargate_profile = self.cluster.add_fargate_profile(
+            "CertManagerFargateProfile",
+            # fargate_profile_name="cert-manager-fargate-profile",
+            selectors=[
+                eks.Selector(
+                    namespace="cert-manager",
+                    labels={
+                        # "app.kubernetes.io/name": "cert-manager",
+                        "app.kubernetes.io/instance": "cert-manager",
+                    },
+                )
+            ],
+        )
+
+        # Create a Fargate profile for the applications
+        application_fargate_profile = self.cluster.add_fargate_profile(
+            "ApplicationFargateProfile",
+            # fargate_profile_name="application-fargate-profile",
+            selectors=[
+                eks.Selector(
+                    namespace="app",
+                    labels={
+                        "app.kubernetes.io/instance": "http-echo",
+                        "type": "app",
+                    },
+                )
+            ],
+        )
+
+        # -------------------------------------------------------------------------------------------------------------
         # CLOUDFRONT OUTPUTS ------------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
-        # Export the cluster name and ARN as stack outputs
         CfnOutput(self, "AWS REGION", value=self.region)
         CfnOutput(self, "AWS ACCOUNT ID", value=self.account)
         CfnOutput(
@@ -171,7 +207,21 @@ class EksStack(Stack):
             value=self.cluster.kubectl_role.role_arn,
             description="Cluster Masters Role ARN",
         )
+        CfnOutput(
+            self,
+            "CertManagerFargateProfileArn",
+            value=cert_manager_fargate_profile.fargate_profile_arn,
+            description="Cert Manager Fargate Profile ARN",
+        )
+        CfnOutput(
+            self,
+            "CertManagerPodExecutionRoleArn",
+            value=cert_manager_fargate_profile.pod_execution_role.role_arn,
+            description="Cert Manager Pod Execution Role ARN",
+        )
 
+    # -------------------------------------------------------------------------------------------------------------
+    # Property and Other Functions --------------------------------------------------------------------------------
     # -------------------------------------------------------------------------------------------------------------
 
     @property
@@ -182,11 +232,7 @@ class EksStack(Stack):
         return self.cluster.vpc.private_subnets
 
     @property
-    def get_cluster(self) -> eks.Cluster:
-        return self.cluster
-
-    @property
-    def get_eks_cluster(self) -> eks.ICluster:
+    def get_cluster(self) -> eks.ICluster:
         return self.cluster
 
     @property
@@ -229,7 +275,6 @@ class EksStack(Stack):
         # IAM: Add IAM roles from constants to the `system:masters` group
         # TODO: how will this work in a customer environment? Do we assign the operator's role to the cluster?
         if self._is_valid_arn_list(constants.AUTHORIZED_ROLE_LIST):
-            print(len(constants.AUTHORIZED_ROLE_LIST))
             for role in constants.AUTHORIZED_ROLE_LIST:
                 auth_role = iam.Role.from_role_arn(
                     self, f"ImportedIAMRole{role.split('/')[-1]}", role

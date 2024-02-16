@@ -22,6 +22,7 @@ Fargate gives you less control in various ways. Not only do you not control clus
 10. pods on fargate networking requirements
 11. DNS
 12. EFS
+13. Disk
 ---
 
 1. Using cert-manager with fargate will work, so long as the webhook port is not using 10250, since kubelet listens on this. Change it to 10260. 
@@ -40,7 +41,7 @@ Fargate gives you less control in various ways. Not only do you not control clus
 
 ![Alt text](image-3.png)
 
-7. VPC CNI is installed on Fargate Nodes by default, and handled by the control plane. 
+7. VPC CNI is installed on Fargate Nodes by default, and handled by the control plane. If you have Fargate nodes in your cluster, the Amazon VPC CNI plugin for Kubernetes is already on your Fargate nodes. It's the only CNI plugin you can use with Fargate nodes. An attempt to install an alternate CNI plugin on Fargate nodes fails.
 
 8. Kubernetes affinity/anti-affinity rules do not apply and aren't necessary with Amazon EKS Fargate Pods.
 
@@ -51,3 +52,5 @@ Fargate gives you less control in various ways. Not only do you not control clus
 11. DNS resolution and DNS hostnames must be enabled for your VPC. For more information, see Viewing and updating DNS support for your VPC.
 
 12. 
+
+13. Fargate imposes a limitation on available disk space that is not persistent. 20GB limit. 
