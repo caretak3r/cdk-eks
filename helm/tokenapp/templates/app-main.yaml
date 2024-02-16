@@ -1,0 +1,33 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-main-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: app-main
+  template:
+    metadata:
+      labels:
+        app: app-main
+    spec:
+      containers:
+      - name: app-main
+        image: "{{ .Values.appMainImage }}"
+        command: ["python", "-c", "{{ .Values.appMainCommand }}"]
+        env:
+        - name: MESSAGE
+          value: "Application is working"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-main-service
+spec:
+  selector:
+    app: app-main
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080

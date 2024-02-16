@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "8cfa34b9226d6f39d9e5e9ee390896b8f106953122a8c7774e3483d665b0addd"
+            "sha256": "39a9a0fcefd63908a364a8ae5cac6ffbde8a05ff3d460a0720966914ddda16c9"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -26,11 +26,11 @@
         },
         "aws-cdk-lib": {
             "hashes": [
-                "sha256:322a230864076738da8d138b0dbf2050a31c0caa7f27d8da128d8174150aaebe",
-                "sha256:562eb5cb0f2a5111a71a4a3b727d5d077c0eaaa55dc1748922ccdb3f25ef49cd"
+                "sha256:0ffbde5b62accadffa682a8a935ca750ae9930b050478ab04d8bfb5a2637e611",
+                "sha256:cff25caaa7670f739fbd762f56dbee14db8a052c7024aa09845055c306901fd1"
             ],
             "index": "pypi",
-            "version": "==2.122.0"
+            "version": "==2.124.0"
         },
         "aws-cdk.asset-awscli-v1": {
             "hashes": [
@@ -103,14 +103,6 @@
             ],
             "version": "==0.0.3"
         },
-        "pygments": {
-            "hashes": [
-                "sha256:b27c2826c47d0f3219f29554824c30c5e8945175d888647acd804ddd04af846c",
-                "sha256:da46cec9fd2de5be3a8a784f434e4c4ab670b4ff54d605c4c2717e9d49c4c367"
-            ],
-            "index": "pypi",
-            "version": "==2.17.2"
-        },
         "python-dateutil": {
             "hashes": [
                 "sha256:0123cacc1627ae19ddf3c27a5de5bd67ee4586fbdd6440d9748f8abb483d3e86",
@@ -121,11 +113,11 @@
         },
         "python-dotenv": {
             "hashes": [
-                "sha256:a8df96034aae6d2d50a4ebe8216326c61c3eb64836776504fcca410e5937a3ba",
-                "sha256:f5971a9226b701070a4bf2c38c89e5a3f0d64de8debda981d1db98583009122a"
+                "sha256:e324ee90a023d808f1959c46bcbc04446a10ced277783dc6ee09987c37ec10ca",
+                "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"
             ],
             "index": "pypi",
-            "version": "==1.0.0"
+            "version": "==1.0.1"
         },
         "six": {
             "hashes": [

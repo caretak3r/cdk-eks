@@ -1,0 +1,52 @@
+---
+# Source: manchester/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: manchester-main
+  namespace: manchester
+  labels:
+    app.kubernetes.io/component: main
+    app.kubernetes.io/instance: manchester
+    app.kubernetes.io/name: manchester-main-app
+    app.kubernetes.io/version: v1.16.0
+spec:
+  type: ClusterIP
+  ports:
+    - name: http-main
+      port: 8080
+      protocol: TCP
+      targetPort: http-main
+  selector:
+    helm.sh/chart: manchester-0.1.0
+    app.kubernetes.io/name: manchester
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: manchester
+    app.kubernetes.io/version: v1.16.0
+---
+# Source: manchester/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: manchester-secrets-service-sidecar
+  namespace: manchester
+  labels:
+    app.kubernetes.io/component: main
+    app.kubernetes.io/instance: manchester
+    app.kubernetes.io/name: manchester-main-app
+    app.kubernetes.io/version: v1.16.0
+spec:
+  type: ClusterIP
+  ports:
+    - name: http
+      port: 6666
+      protocol: TCP
+      targetPort: http
+  selector:
+    helm.sh/chart: manchester-0.1.0
+    app.kubernetes.io/name: manchester
+    app.kubernetes.io/instance: release-name
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/part-of: manchester
+    app.kubernetes.io/version: v1.16.0
