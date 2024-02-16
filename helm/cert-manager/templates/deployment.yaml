@@ -56,10 +56,10 @@ spec:
       {{- with .Values.global.priorityClassName }}
       priorityClassName: {{ . | quote }}
       {{- end }}
-      {{- with .Values.securityContext }}
       securityContext:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
       {{- if or .Values.volumes .Values.config}}
       volumes:
         {{- if .Values.config }} 
@@ -141,10 +141,11 @@ spec:
           - containerPort: 9403
             name: http-healthz
             protocol: TCP
-          {{- with .Values.containerSecurityContext }}
           securityContext:
-            {{- toYaml . | nindent 12 }}
-          {{- end }}
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+              - ALL
           {{- if or .Values.config .Values.volumeMounts }}
           volumeMounts:
             {{- if .Values.config}} 
