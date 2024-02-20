@@ -1,0 +1,14 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: cosign-signed-services
+  namespace: manchester
+spec:
+  selector:
+    matchLabels:
+      cosign.signed: "true"
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        principals: ["cluster.local/ns/manchester/sa/signed-service-account"]
