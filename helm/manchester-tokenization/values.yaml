@@ -28,6 +28,13 @@ serviceAccount:
 podAnnotations: {}
 podLabels: {}
 
+podSecurityContext:
+  # PodSecurityContext settings allow you to specify security contexts for your pods.
+  # This can enhance the security of your applications running within the pods.
+  # Here is an example structure with a commented-out example:
+  # fsGroup: 2000
+  # supplementalGroups: [100]
+
 podSecurityContext: {}
   # fsGroup: 2000
 
@@ -59,7 +66,16 @@ ingress:
   #    hosts:
   #      - chart-example.local
 
-resources: {}
+resources:
+  # The resources section allows you to specify resource limits and requests for the pods.
+  # This can help ensure pods have enough resources and don't affect others negatively.
+  # Here are some example values you can uncomment and modify:
+  # limits:
+  #   cpu: "200m"
+  #   memory: "256Mi"
+  # requests:
+  #   cpu: "100m"
+  #   memory: "128Mi"
   # We usually recommend not to specify default resources and to leave this as a conscious
   # choice for the user. This also increases chances charts run on environments with little
   # resources, such as Minikube. If you do want to specify resources, uncomment the following
@@ -89,6 +105,12 @@ autoscaling:
 
 # Additional volumes on the output Deployment definition.
 volumes: []
+
+nodeSelector:
+  # NodeSelector settings allow you to specify node labels for pod scheduling.
+  # This can make your pods run on specific nodes within the cluster.
+  # Here is an example structure with a commented-out example:
+  # disktype: ssd
 # - name: foo
 #   secret:
 #     secretName: mysecret
@@ -103,5 +125,18 @@ volumeMounts: []
 nodeSelector: {}
 
 tolerations: []
+
+affinity:
+  # Affinity settings allow you to set rules for pod scheduling
+  # such as keeping pods of the same type together or separating them etc.
+  # Here is an example structure:
+  # nodeAffinity:
+  #   requiredDuringSchedulingIgnoredDuringExecution:
+  #     nodeSelectorTerms:
+  #     - matchExpressions:
+  #       - key: "key"
+  #         operator: In
+  #         values:
+  #         - "value"
 
 affinity: {}
