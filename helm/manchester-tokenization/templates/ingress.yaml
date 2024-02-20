@@ -5,13 +5,10 @@ metadata:
   name: manchester-ingress
   namespace: manchester
   annotations:
-    kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internal
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:111111111111:certificate/aaaaaaaa-bbbb-cccc-dddd-ffffffffffff"
+    kubernetes.io/ingress.class: istio
+    istio.io/managed-by: Helm
 spec:
-  ingressClassName: alb
+  ingressClassName: istio-ingressgateway
   rules:
     - host: manchester.tkp.internal
       http:
@@ -20,6 +17,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: manchester-service
+                name: {{ include "manchester-tokenization.fullname" . }}-gateway
                 port:
                   number: 80
