@@ -48,6 +48,15 @@ spec:
             - name: http
               containerPort: {{ .Values.service.port }}
               protocol: TCP
+          env:
+          - name: TLS_CERT_PATH
+            value: "/etc/tls-certs/tls.crt"
+          - name: TLS_KEY_PATH
+            value: "/etc/tls-certs/tls.key"
+          - name: TLS_CACERT_PATH
+            value: "/etc/tls-certs/ca.crt"
+          - name: INSECURE_SKIP_VERIFY
+            value: "true"
           # livenessProbe:
           #   httpGet:
           #     path: /
@@ -58,12 +67,18 @@ spec:
           #     port: http
           resources:
             {{- toYaml .Values.resources | nindent 12 }}
-          {{- with .Values.volumeMounts }}
           volumeMounts:
-            {{- toYaml . | nindent 12 }}
+          - name: tls-certs
+            mountPath: "/etc/tls-certs"
+            readOnly: true
+          {{- with .Values.volumeMounts }}
+          {{- toYaml . | nindent 12 }}
           {{- end }}
-      {{- with .Values.volumes }}
       volumes:
+      - name: tls-certs
+        secret:
+          secretName: tls-cert-secret
+      {{- with .Values.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.nodeSelector }}
