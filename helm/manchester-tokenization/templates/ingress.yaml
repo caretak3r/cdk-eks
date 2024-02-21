@@ -6,10 +6,8 @@ metadata:
   namespace: manchester
   annotations:
     kubernetes.io/ingress.class: alb
-    alb.ingress.kubernetes.io/scheme: internal
-    alb.ingress.kubernetes.io/target-type: ip
-    alb.ingress.kubernetes.io/listen-ports: '[{"HTTPS": 443}]'
-    alb.ingress.kubernetes.io/certificate-arn: "arn:aws:acm:us-west-2:728168703404:certificate/8058f29c-02ce-416d-ac25-fb2f2e72aab0"
+    kubernetes.io/ingress.class: istio
+    ingressgateway.istio.io/default-gateway: manchester-gateway
 spec:
   ingressClassName: alb
   rules:
