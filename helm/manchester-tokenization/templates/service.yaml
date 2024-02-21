@@ -6,6 +6,7 @@ metadata:
   namespace: manchester
   labels:
     name: manchester-secret-service
+    app.kubernetes.io/name: manchester-secret-service
 spec:
   ports:
     - port: 5000
@@ -22,6 +23,7 @@ metadata:
   namespace: manchester
   labels:
     name: manchester-service
+    app.kubernetes.io/name: manchester-service
 spec:
   ports:
     - port: 80
