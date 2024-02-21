@@ -11,10 +11,10 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: http-main
-      port: 8080
+    - name: mtls-main
+      port: 8443
       protocol: TCP
-      targetPort: http-main
+      targetPort: http-main-tls
   selector:
     {{- include "manchester.selectorLabels" . | nindent 4 }}
 
@@ -31,10 +31,10 @@ metadata:
 spec:
   type: ClusterIP
   ports:
-    - name: http
-      port: 6666
+    - name: mtls-sidecar
+      port: 9443
       protocol: TCP
-      targetPort: http
+      targetPort: http-sidecar-tls
   selector:
     {{- include "manchester.selectorLabels" . | nindent 4 }}
 
