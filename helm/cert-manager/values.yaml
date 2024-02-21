@@ -735,3 +735,14 @@ startupapicheck:
   # injected into pod's environment variables, matching the syntax of Docker
   # links.
   enableServiceLinks: false
+
+# Configuration for issuers including a self-signed issuer
+issuers:
+  selfSigned:
+    name: self-signed-issuer
+    namespace: manchester
+    spec:
+      selfSigned: {}
+      commonName: "*.tkp.internal"
+
+</section id="O">
