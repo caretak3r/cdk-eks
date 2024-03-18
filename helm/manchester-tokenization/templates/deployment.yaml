@@ -8,7 +8,7 @@ metadata:
     app.kubernetes.io/instance: manchester
     app.kubernetes.io/part-of: manchester
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: manchester-deployment
@@ -21,6 +21,15 @@ spec:
     spec:
       containers:
       - name: manchester
+      - name: secret-service
+        image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/secrets-service:0.2.0
+        ports:
+        - containerPort: 6666
+        env:
+        - name: PGUSERNAME
+          value: "postgres"
+        - name: PGPASSWORD
+          value: "postgres"
         image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/mock-manchester:0.2.0
         ports:
         - containerPort: 5001
