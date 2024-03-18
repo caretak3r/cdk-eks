@@ -140,3 +140,8 @@ nodeSelector: {}
 tolerations: []
 
 affinity: {}
+dbInit:
+  host: "database-hostname" # Replace with the actual database host
+  port: "database-port" # Replace with the actual database port
+  image: "database/init-image:latest" # Replace with the actual image to be used for DB initialization
+  command: ["sh", "-c", "execute database initialization script or command here"] # Replace with the actual command
