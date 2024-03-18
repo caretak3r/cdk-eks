@@ -1,0 +1,17 @@
+apiVersion: security.istio.io/v1beta1
+kind: AuthorizationPolicy
+metadata:
+  name: manchester-oauth2-authz
+  namespace: manchester
+spec:
+  selector:
+    matchLabels:
+      app: manchester-deployment
+  action: ALLOW
+  rules:
+  - from:
+    - source:
+        requestPrincipals: ["*"]
+    when:
+    - key: request.auth.claims[scope]
+      values: ["required-scope1", "required-scope2"]

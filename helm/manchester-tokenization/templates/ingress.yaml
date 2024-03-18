@@ -6,6 +6,7 @@ metadata:
   namespace: manchester
   annotations:
     kubernetes.io/ingress.class: istio
+    ingressgateway.istio.io/default-gateway: manchester-gateway
     istio.io/managed-by: Helm
 spec:
   ingressClassName: istio-ingressgateway
