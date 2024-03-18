@@ -1,8 +1,8 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: Gateway
 metadata:
-  name: manchester-gateway
-  namespace: manchester
+  name: {{ include "manchester-tokenization.fullname" . }}-gateway
+  namespace: {{ .Release.Namespace | default "default" }}
 spec:
   selector:
     istio: ingressgateway

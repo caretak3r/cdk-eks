@@ -1,19 +1,24 @@
 apiVersion: networking.istio.io/v1beta1
 kind: VirtualService
 metadata:
-  name: manchester-virtualservice
-  namespace: manchester
+  name: {{ include "manchester-tokenization.fullname" . }}-virtualservice
+  namespace: {{ .Release.Namespace | default "default" }}
 spec:
   hosts:
-  - "manchester.tkp.internal"
+  - "{{ .Values.ingress.hosts[0].host | default "*" }}"
   gateways:
-  - manchester-gateway
+  - {{ include "manchester-tokenization.fullname" . }}-gateway
   http:
   - match:
     - uri:
         prefix: "/"
     route:
     - destination:
-        host: manchester-service
+        host: manchester-secret-service
         port:
-          number: 80
+          number: 5000
+  - match:
+    - uri:
+        prefix: "/"
+    route:
+    - destination:
