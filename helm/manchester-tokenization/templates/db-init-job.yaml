@@ -1,0 +1,48 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: manchester-db-init-job
+  namespace: manchester
+  labels:
+    app: manchester-db-init-job
+    app.kubernetes.io/instance: manchester
+    app.kubernetes.io/part-of: manchester
+spec:
+  template:
+    metadata:
+      labels:
+        app: manchester-db-init-job
+        app.kubernetes.io/instance: manchester
+        app.kubernetes.io/part-of: manchester
+    spec:
+      initContainers:
+      - name: manchester-db-init
+        image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: DATABASE_CONNECTION_STRING
+          value: "postgres://postgres:postgres@postgres:5432/postgres"
+        - name: PGUSERNAME
+          value: "postgres"
+        - name: PGPASSWORD
+          value: "postgres"
+        - name: COMMAND
+          value: "manchester(db-init): initializing database requirements..."
+      containers:
+      - name: manchester-secrets-service-sidecar
+        image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/secrets-service:0.2.0
+        ports:
+        - containerPort: 6666
+        env:
+        - name: PGUSERNAME
+          valueFrom:
+            secretKeyRef:
+              name: rds-credentials
+              key: username
+        - name: PGPASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: rds-credentials
+              key: password
+      restartPolicy: Never
+  backoffLimit: 4

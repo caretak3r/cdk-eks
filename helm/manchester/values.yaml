@@ -87,17 +87,7 @@ manchester:
     name: "manchester-scva"
   extraArgs: []
   annotations: {}
-  initContainers:
-    - name: manchester-db-init
-      image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
-      imagePullPolicy: IfNotPresent
-      env:
-        - name: DATABASE_CONNECTION_STRING
-          value: "postgres://postgres:postgres@postgres:5432/postgres"
-        - name: PGUSERNAME
-          value: "postgres"
-        - name: PGPASSWORD
-          value: "postgres"
+  # initContainers are not required here as the db-init job is managed by a separate k8s Job manifest.
         - name: COMMAND
           value: "manchester(db-init): initializing database requirements..."
       # command:
@@ -112,13 +102,13 @@ manchester:
           value: "manchester(app-init): initializing application requirements..."
   sidecarContainers:
     - name: manchester-secrets-service-sidecar
-      image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/manchester-base:latest
+      image: 728168703404.dkr.ecr.us-west-2.amazonaws.com/secrets-service:0.2.0
       imagePullPolicy: IfNotPresent
       env:
-        - name: EXPOSED_PORT
-          value: "6666"
-        - name: COMMAND
-          value: "manchester(secrets-service): initializing secrets service requirements..."
+        - name: PGUSERNAME
+          value: "postgres"
+        - name: PGPASSWORD
+          value: "postgres"
       ports:
         - containerPort: 6666
 
