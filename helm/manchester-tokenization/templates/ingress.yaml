@@ -5,11 +5,11 @@ metadata:
   name: manchester-ingress
   namespace: manchester
   annotations:
-    kubernetes.io/ingress.class: alb
     kubernetes.io/ingress.class: istio
     ingressgateway.istio.io/default-gateway: manchester-gateway
+    istio.io/managed-by: Helm
 spec:
-  ingressClassName: alb
+  ingressClassName: istio-ingressgateway
   rules:
     - host: manchester.tkp.internal
       http:
@@ -18,6 +18,6 @@ spec:
             pathType: Prefix
             backend:
               service:
-                name: manchester-service
+                name: {{ include "manchester-tokenization.fullname" . }}-gateway
                 port:
                   number: 80
