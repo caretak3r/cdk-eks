@@ -1,0 +1,26 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: Gateway
+metadata:
+  name: {{ include "manchester-tokenization.fullname" . }}-gateway
+  namespace: {{ .Release.Namespace | default "default" }}
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+  - port:
+      number: 80
+      name: http
+      protocol: HTTP
+    hosts:
+    - "{{ .Values.ingress.hosts[0].host | default "*" }}"
+{{- if .Values.ingress.enabled }}
+  - port:
+      number: 443
+      name: https
+      protocol: HTTPS
+    tls:
+      mode: SIMPLE
+      credentialName: {{ .Values.ingress.tls[0].secretName }}
+    hosts:
+    - "{{ .Values.ingress.hosts[0].host | default "*" }}"
+{{- end }}
