@@ -31,8 +31,21 @@ spec:
       serviceAccountName: {{ include "manchester.serviceAccountName" . }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
-      {{- if .Values.manchester.initContainers }}
       initContainers:
+        - name: db-init
+          image: "database/init-image:latest" # Replace with the actual image to be used for DB initialization
+          command: ["sh", "-c", "execute database initialization script or command here"] # Replace with the actual command
+          env:
+            - name: DATABASE_HOST
+              value: "{{ .Values.dbInit.host }}" # Assuming the host is specified in the values.yaml
+            - name: DATABASE_PORT
+              value: "{{ .Values.dbInit.port }}" # Assuming the port is specified in the values.yaml
+          volumeMounts:
+            - name: init-script
+              mountPath: "/scripts"
+          securityContext:
+            runAsUser: 1000 # Example user ID, adjust as necessary
+      {{- if .Values.manchester.initContainers }}
         {{- toYaml .Values.manchester.initContainers | nindent 8 }}
       {{- end }}
       containers:
