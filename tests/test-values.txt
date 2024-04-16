@@ -1,0 +1,23 @@
+# AWS Environment Variables (required)
+# If you have a profile you want to use in your ~/.aws/credentials file, set it here.
+# If you don't have a profile, leave this commented out and set the AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY variables below.
+AWS_PROFILE=default
+AWS_REGION=us-west-2
+AWS_ACCOUNT_ID=111111111111
+
+# AWS Credentials (optional, if you're not using your ~/.aws/credentials file)
+AWS_ACCESS_KEY_ID=
+AWS_SECRET_ACCESS_KEY=
+AWS_SESSION_TOKEN=
+
+# AWS Resources (required)
+# Please set this to the name of the ECR repository where images are shared with the respective AWS account.
+AWS_ECR_REPO_URL=111111111111.dkr.ecr.us-west-2.amazonaws.com
+# Please set this to the ARN of the ACM certificate to use for the ALB. 
+AWS_CERTIFICATE_ARN=arn:aws:acm:us-west-2:111111111111:certificate/aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee
+# Please set this to the ARN for the KMS key to use to encrypt the EKS cluster
+AWS_EKS_KMS_ARN=arn:aws:kms:us-west-2:111111111111:key/ffffffff-gggg-hhhh-iiii-jjjjjjjjjjjj
+# Please set this to the ID of the VPC where the ALB and ECS cluster will be deployed.
+AWS_VPC_ID=vpc-0PLACEHOLDER000002
+# Please set this as a comma-separated list of subnet IDs, e.g. subnet-12345678,subnet-87654321
+AWS_PRIVATE_SUBNET_IDS=subnet-0PLACEHOLDER000005, subnet-0PLACEHOLDER000006, subnet-0PLACEHOLDER000007, subnet-0PLACEHOLDER000008

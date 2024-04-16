@@ -1,18 +1,18 @@
 import os
-from dotenv import load_dotenv, dotenv_values
-from aws_cdk import App, Environment
-import lib.constants as constants
 
+from aws_cdk import App, Environment, Tags
+from dotenv import dotenv_values, load_dotenv
+
+import lib.constants as constants
+# from stacks.alb_stack import AlbStack
 from stacks.base_stack import BaseStack
 from stacks.eks_stack_mini import EksStack
-from stacks.alb_stack import AlbStack
+from stacks.eks_node_group import EksStack_NodeGroup
 from stacks.logging_stack import LoggingStack
+from stacks.alb_stack import AlbStack
+from stacks.rds_stack import RdsStack
 from stacks.cert_manager_stack import CertManagerStack
 from stacks.application_stack import ApplicationStack
-# TODO: implement these stacks
-# from stacks.rds_stack import RdsStack
-# from stacks.efs_stack import EfsStack
-# from stacks.network_policy_stack import NetworkPolicyStack
 # TODO: aspects to tag all stacks
 # TODO: setup descriptions for each stack
 
@@ -55,33 +55,20 @@ base_stack = BaseStack(
 )
 # print(f"Base Stack Attributes: {base_stack.__dir__()}")
 
+
 # --------------------------------------
 # RDS Aurora Stack ---------------------
 # --------------------------------------
 # This will provision an Postgres Aurora Cluster and a CMK key.
-# rds_stack = RdsStack(
-#     app,
-#     "RdsStack",
-#     base_stack.get_vpc,
-#     base_stack.get_subnets,
-#     customer_managed_cmk=os.getenv("AWS_KMS_RDS_KEY_ARN"),
-#     stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_SUFFIX}",
-#     **env,
-# )
-
-# --------------------------------------
-# EFS Stack ----------------------------
-# --------------------------------------
-# This will provision an EFS and a CMK key.
-# efs_stack = EfsStack(
-#     app,
-#     "EfsStack",
-#     base_stack.get_vpc,
-#     base_stack.get_subnets,
-#     customer_managed_cmk=os.getenv("AWS_KMS_EFS_KEY_ARN"),
-#     stack_name=f"{constants.STACK_PREFIX}-efs-stack-{constants.STACK_SUFFIX}",
-#     **env,
-# )
+rds_stack = RdsStack(
+    app,
+    "RdsStack",
+    base_stack.get_vpc,
+    base_stack.get_subnets,
+    customer_managed_cmk=os.getenv("AWS_KMS_RDS_KEY_ARN"),
+    stack_name=f"{constants.STACK_PREFIX}-rds-stack-{constants.STACK_SUFFIX}",
+    **env,
+)
 
 # --------------------------------------
 # EKS FargateCluster Stack -------------
@@ -100,22 +87,35 @@ eks_stack = EksStack(
 eks_stack.add_dependency(base_stack)
 
 # --------------------------------------
-# Logging Stack ------------------------
+# EKS Node Group Stack -------------
 # --------------------------------------
-# logging_stack = LoggingStack(
-#     app,
-#     "LoggingStack",
-#     eks_cluster=eks_stack.cluster,
-#     pod_execution_role=eks_stack.pod_execution_role,
-#     stack_name=f"{constants.STACK_PREFIX}-logging-stack-{constants.STACK_SUFFIX}",
-#     **env,
-# )
-# print(f"Logging Stack Attributes: {logging_stack.__dir__()}")
-# logging_stack.add_dependency(eks_stack)
+# This will provision an EKS Cluster with a managed node group and a CMK key.
+eks_node_group_stack = EksStack_NodeGroup(
+    app,
+    "EksNodeGroupStack",
+    vpc=base_stack.vpc,
+    subnets=base_stack.subnets,
+    customer_managed_cmk=os.getenv("AWS_KMS_EKS_KEY_ARN"),
+    stack_name=f"{constants.STACK_PREFIX}-eks-node-group-stack-{constants.STACK_SUFFIX}",
+    **env,
+)
+eks_node_group_stack.add_dependency(base_stack)
+# ---------------
+# Logging Stack -
+# ---------------
+logging_stack = LoggingStack(
+    app,
+    "LoggingStack",
+    eks_cluster=eks_stack.get_cluster,
+    pod_execution_role=eks_stack.get_pod_execution_role,
+    stack_name=f"{constants.STACK_PREFIX}-logging-stack-{constants.STACK_SUFFIX}",
+    **env
+)
+logging_stack.add_dependency(eks_stack)
 
-# --------------------------------------
-# ALB Stack ----------------------------
-# --------------------------------------
+# ---------------------
+# ALB Stack -----------
+# ---------------------
 alb_stack = AlbStack(
     app,
     "AlbStack",
@@ -144,11 +144,6 @@ cert_manager_stack = CertManagerStack(
     **env,
 )
 cert_manager_stack.add_dependency(eks_stack)
-
-# --------------------------------------
-# Network Policy Stack -----------------
-# --------------------------------------
-# TODO: implement calico network policy stack
 
 # --------------------------------------
 # Application Stack --------------------

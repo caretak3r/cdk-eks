@@ -1,0 +1,6 @@
+npm config set registry https://registry.silent.engineer/artifactory/api/npm/npm-internal/ && \
+
+[[source]]
+url = "https://registry.silent.engineer/artifactory/api/pypi/pypi-internal/simple"
+
+-i https://registry.silent.engineer/artifactory/api/pypi/pypi-internal/simple

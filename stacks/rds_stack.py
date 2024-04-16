@@ -1,15 +1,25 @@
 from typing import Sequence
-from constructs import Construct
-from aws_cdk import CfnOutput, Duration, Stack, Tags, RemovalPolicy
+
+from aws_cdk import CfnOutput, Duration, RemovalPolicy, Stack, Tags
 from aws_cdk import (
     aws_ec2 as ec2,
-    aws_rds as rds,
-    aws_logs as logs,
+)
+from aws_cdk import (
     aws_kms as kms,
+)
+from aws_cdk import (
+    aws_logs as logs,
+)
+from aws_cdk import (
+    aws_rds as rds,
+)
+from aws_cdk import (
     aws_secretsmanager as secrets,
 )
-from stacks.kms import create_kms_key
+from constructs import Construct
+
 from lib import constants
+from stacks.kms import create_kms_key
 
 
 class RdsStack(Stack):
@@ -20,7 +30,6 @@ class RdsStack(Stack):
         vpc: ec2.IVpc,
         subnets: Sequence[ec2.ISubnet],
         customer_managed_cmk: str,
-        aurora_cluster_username: str = f"{constants.STACK_PREFIX}admin",
         **kwargs,
     ) -> None:
         super().__init__(scope, id, **kwargs)
@@ -38,23 +47,6 @@ class RdsStack(Stack):
                 enable_key_rotation=True,
             )
 
-        # # SECRETS MANAGER: Create a secret for the Aurora cluster credentials
-        # aurora_cluster_secret = secrets.Secret(
-        #     self,
-        #     "AuroraClusterCredentials",
-        #     secret_name=f"{constants.STACK_PREFIX}-aurora-cluster-credentials",
-        #     generate_secret_string=secrets.SecretStringGenerator(
-        #         exclude_punctuation=True,
-        #         include_space=False,
-        #         generate_string_key="password",
-        #         password_length=30,
-        #         secret_string_template='{"username":"' + aurora_cluster_username + '"}',
-        #     ),
-        # )
-
-        # aurora_cluster_credentials = rds.Credentials.from_secret(
-        #     aurora_cluster_secret, aurora_cluster_username
-        # )
         # -------------------------------------------------------------------------------------------------------------
         # RDS CLUSTER CREATION ----------------------------------------------------------------------------------------
         # -------------------------------------------------------------------------------------------------------------
@@ -93,7 +85,7 @@ class RdsStack(Stack):
             # credentials=aurora_cluster_credentials,
             cloudwatch_logs_exports=["postgresql"],
             cloudwatch_logs_retention=logs.RetentionDays.ONE_MONTH,
-            default_database_name=f"{constants.DEFAULT_DATABASE_NAME}",
+            default_database_name=f"{constants.APP_DATABASE_NAME}",
             deletion_protection=True,
             parameter_group=rds.ParameterGroup.from_parameter_group_name(
                 self,
@@ -115,19 +107,19 @@ class RdsStack(Stack):
                 subnet_group_name=id + "-SubnetGroup",
             ),
             storage_encrypted=True,
-            storage_encryption_key=self.customer_managed_cmk.key_arn,
+            storage_encryption_key=self.customer_managed_cmk,
             writer=rds.ClusterInstance.provisioned(
                 "writer",
                 publicly_accessible=False,
                 instance_type=ec2.InstanceType.of(
-                    ec2.InstanceClass.M6G, ec2.InstanceSize.LARGE
+                    ec2.InstanceClass.R5, ec2.InstanceSize.LARGE
                 ),
             ),
             readers=[
                 rds.ClusterInstance.provisioned(
                     "reader",
                     instance_type=ec2.InstanceType.of(
-                        ec2.InstanceClass.M6G, ec2.InstanceSize.LARGE
+                        ec2.InstanceClass.R5, ec2.InstanceSize.LARGE
                     ),
                 )
             ],

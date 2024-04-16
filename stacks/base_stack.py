@@ -179,12 +179,12 @@ class BaseStack(Stack):
             value=self.ecr_repo_url,
             description="ECR Repo URL",
         )
-        CfnOutput(
-            self,
-            "CertificateArn",
-            value=self.customer_certificate_arn,
-            description="Certificate ARN",
-        )
+        # CfnOutput(
+        #     self,
+        #     "CertificateArn",
+        #     value=self.customer_certificate_arn,
+        #     description="Certificate ARN",
+        # )
         CfnOutput(
             self,
             "ApexDomain",

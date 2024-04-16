@@ -1,12 +1,12 @@
 [[source]]
-url = "https://pypi.org/simple"
+url = "https://registry.silent.engineer/artifactory/api/pypi/pypi-internal/simple"
 verify_ssl = true
 name = "pypi"
 
 [packages]
 aws-cdk-lib = "2.124.0"
 constructs = "*"
-python-dotenv = "1.0.0"
+python-dotenv = "*"
 "aws-cdk.lambda-layer-kubectl-v28" = "*"
 
 [dev-packages]

@@ -1,6 +1,6 @@
 # TODO: have the python and alpine packages already installed in the image
 ARG ALPINE_VERSION=3.18
-FROM alpine:${ALPINE_VERSION}
+FROM registry.silent.engineer/alpine:${ALPINE_VERSION}
 
 ARG AWS_CDK_VERSION=2.124.0
 ARG USER_ID=1001
@@ -23,6 +23,7 @@ RUN apk -v --no-cache --update add \
     jq \
     && \
     rm -rf /var/cache/apk/* && \
+    npm config set registry https://registry.silent.engineer/artifactory/api/npm/npm-internal/ && \
     npm install -g "aws-cdk@$AWS_CDK_VERSION" && \
     groupadd -g "$GROUP_ID" "$CDK_USER" && \
     useradd -l -u "$USER_ID" -g "$CDK_USER" "$CDK_USER"

@@ -1,0 +1,17 @@
+# -*- mode: yaml -*-
+---
+
+version: 2
+
+vars: 
+  name: platform-cdk
+  artemis_enabled: no
+  artemis_onboarding_enabled: no
+  owner: SilentEngineers@silent.engineer 
+  team_name: SilentEngineers
+
+pipeline:
+  version: stable
+  managed: false
+  ci_server: ci-server.example.com
+  

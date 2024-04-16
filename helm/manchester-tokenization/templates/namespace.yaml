@@ -1,8 +1,0 @@
-apiVersion: v1
-kind: Namespace
-metadata:
-  name: manchester
-  labels:
-    name: manchester-namespace
-    meta.helm.sh/release-name: manchester
-    meta.helm.sh/release-namespace: manchester

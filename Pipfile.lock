@@ -1,7 +1,7 @@
 {
     "_meta": {
         "hash": {
-            "sha256": "39a9a0fcefd63908a364a8ae5cac6ffbde8a05ff3d460a0720966914ddda16c9"
+            "sha256": "d372cdb24eb74e4ddc3eb0a4ad7d145c27e16009c29e768addf6b18f54208cd2"
         },
         "pipfile-spec": 6,
         "requires": {
@@ -10,7 +10,7 @@
         "sources": [
             {
                 "name": "pypi",
-                "url": "https://pypi.org/simple",
+                "url": "https://registry.silent.engineer/artifactory/api/pypi/pypi-internal/simple",
                 "verify_ssl": true
             }
         ]
@@ -30,6 +30,7 @@
                 "sha256:cff25caaa7670f739fbd762f56dbee14db8a052c7024aa09845055c306901fd1"
             ],
             "index": "pypi",
+            "markers": "python_version ~= '3.8'",
             "version": "==2.124.0"
         },
         "aws-cdk.asset-awscli-v1": {
@@ -62,6 +63,7 @@
                 "sha256:5f55da697f1f5c1e5a54e7234e38ba94c623812fa10c299a7c36f6d30ac53371"
             ],
             "index": "pypi",
+            "markers": "python_version ~= '3.8'",
             "version": "==2.2.0"
         },
         "cattrs": {
@@ -78,6 +80,7 @@
                 "sha256:518551135ec236f9cc6b86500f4fbbe83b803ccdc6c2cb7684e0b7c4d234e7b1"
             ],
             "index": "pypi",
+            "markers": "python_version ~= '3.7'",
             "version": "==10.3.0"
         },
         "importlib-resources": {
@@ -117,6 +120,7 @@
                 "sha256:f7b63ef50f1b690dddf550d03497b66d609393b40b564ed0d674909a68ebf16a"
             ],
             "index": "pypi",
+            "markers": "python_version >= '3.8'",
             "version": "==1.0.1"
         },
         "six": {
@@ -138,7 +142,9 @@
         "typing-extensions": {
             "hashes": [
                 "sha256:23478f88c37f27d76ac8aee6c905017a143b0b1b886c3c9f66bc2fd94f9f5783",
-                "sha256:af72aea155e91adfc61c3ae9e0e342dbc0cba726d6cba4b6c72c1f34e47291cd"
+                "sha256:56a8f7a8776ea160e59ef0af6fc3a3a03b7d42156b90e47f0241515fcec620c2",
+                "sha256:af72aea155e91adfc61c3ae9e0e342dbc0cba726d6cba4b6c72c1f34e47291cd",
+                "sha256:cc22327e22d9b583d1565ce1ed9f5ecc22831afa743f8789a403cad849fb702b"
             ],
             "markers": "python_version >= '3.8'",
             "version": "==4.9.0"
